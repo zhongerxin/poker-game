@@ -6,8 +6,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // import shutdownHtml from "./widget/shutdown.html";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
+import { env } from "cloudflare:workers";
 
 
+
+const getWidgetHtml = async () => {
+  const html = await (await env.ASSETS.fetch("http://localhost/")).text();
+//   html = html.replace(
+//     "<!--RUNTIME_CONFIG-->",
+//     `<script>window.HOST = \`${host}\`;</script>`
+//   );
+  return html;
+};
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
@@ -60,7 +70,7 @@ const START_HAND_WIDGET = {
   title: "开始一手德州扑克",
   invoking: "正在开始一手德州扑克…",
   invoked: "德州扑克已开始",
-  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+  html: await getWidgetHtml(),
 } as const;
 
 const BOARD_WIDGET = {
