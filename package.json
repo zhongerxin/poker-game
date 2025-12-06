@@ -12,9 +12,12 @@
 		"publish": true
 	},
 	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.24.3",
+		"agents": "^0.2.30",
 		"hono": "4.10.7",
 		"react": "19.2.0",
-		"react-dom": "19.2.0"
+		"react-dom": "19.2.0",
+		"zod": "^4.1.13"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "1.15.3",

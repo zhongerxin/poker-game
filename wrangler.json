@@ -11,5 +11,19 @@
 	"assets": {
 		"directory": "./dist/client",
 		"not_found_handling": "single-page-application"
-	}
+	},
+	"durable_objects": {
+		"bindings": [
+		{
+			"name": "POKER_DO",       
+			"class_name": "PokerDO"   
+		}
+		]
+	},
+	"migrations": [
+		{
+		"tag": "v1",                 
+		"new_classes": ["PokerDO"]
+		}
+	]
 }
