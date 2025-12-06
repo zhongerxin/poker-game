@@ -70,7 +70,7 @@ const START_HAND_WIDGET = {
   title: "开始一手德州扑克",
   invoking: "正在开始一手德州扑克…",
   invoked: "德州扑克已开始",
-  html: await getWidgetHtml(),
+  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
 } as const;
 
 const BOARD_WIDGET = {
@@ -158,7 +158,7 @@ for (const resource of listResources) {
           {
             uri: resource.uri,
             mimeType: resource.mimeType,
-            text: resource.text,
+            text: await getWidgetHtml(),
             _meta: resource._meta
           }
         ]
