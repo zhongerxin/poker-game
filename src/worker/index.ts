@@ -10,8 +10,8 @@ import { PokerDO, loadGame, saveGame } from "./PokerDO";
 
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
-// Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER DO 命名空间
-type DurableEnv = Env & { POKER: DurableObjectNamespace };
+// Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
+type DurableEnv = Env & { POKER_DO: DurableObjectNamespace };
 
 // 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
 export let pokerNamespace: DurableObjectNamespace | undefined;
@@ -346,8 +346,8 @@ const mcpHandler = createMcpHandler(server);
 
 export default {
   async fetch(req: Request, env: DurableEnv, ctx: ExecutionContext) {
-    // 将当前请求的 POKER 绑定保存下来，供 getPokerStub 等函数使用
-    pokerNamespace = env.POKER
+    // 将当前请求的 POKER_DO 绑定保存下来，供 getPokerStub 等函数使用
+    pokerNamespace = env.POKER_DO;
     const url = new URL(req.url);
     if (url.pathname.startsWith("/mcp")) return mcpHandler(req, env, ctx);
 
