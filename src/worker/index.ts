@@ -76,7 +76,7 @@ const SHUTDOWN_WIDGET = {
   title: "摊牌",
   invoking: "准备摊牌",
   invoked: "已摊牌",
-  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+  html: "<html><body><h1>开始s一手德州扑克</h1></body></html>",
 } as const;
 
 const START_HAND_WIDGET_META = {
