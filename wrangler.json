@@ -9,7 +9,7 @@
 	},
 	"upload_source_maps": true,
 	"assets": {
-		"directory": "dist/client",
+		"directory": "dist",
   		"binding": "ASSETS"
 	},
 	"durable_objects": {
