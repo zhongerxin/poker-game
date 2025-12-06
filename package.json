@@ -37,7 +37,6 @@
 	},
 	"private": true,
 	"scripts": {
-		"prebuild": "npm i -g npm@10.8.2 && npm --version",
 		"build": "vite build",
 		"cf-typegen": "wrangler types",
 		"check": "tsc && vite build && wrangler deploy --dry-run",
