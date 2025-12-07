@@ -199,7 +199,7 @@ server.registerTool(
     switch (stage) {
       case "flop": {
         if (board.length !== 0) {
-          throw new Error("翻牌已发。");
+          throw new Error("翻牌已发 。");
         }
         const flop = [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
         board.push(...flop);
