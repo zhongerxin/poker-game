@@ -22,6 +22,11 @@ function App() {
 		return [String(hero[0] ?? '??'), String(hero[1] ?? '??')] as const;
 	}, [meta]);
 
+	const ai = useMemo(() => {
+		const ai = Array.isArray(meta?.ai) ? meta!.ai : ['??', '??'];
+		return [String(ai[0] ?? '??'), String(ai[1] ?? '??')] as const;
+	}, [meta]);
+
 	const board = useMemo(() => {
 		const board = Array.isArray(meta?.board) ? meta!.board : ['??', '??', '??', '??', '??'];
 		return [String(board[0] ?? '??'), String(board[1] ?? '??'), String(board[2] ?? '??'), String(board[3] ?? '??'), String(board[4] ?? '??')] as const;
@@ -50,6 +55,9 @@ function App() {
 			</div>
 			<div className="flex items-center justify-center">
 				{hero.join(' ')}
+			</div>
+			<div className="flex items-center justify-center">
+				{ai.join(' ')}
 			</div>
 			<Button onClick={toggleDisplayMode}>Switch {displayMode === 'inline' ? 'PIP' : 'Inline'}</Button>
 		</div>
