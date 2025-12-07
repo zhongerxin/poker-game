@@ -17,9 +17,9 @@ function App() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
-	const hole = useMemo(() => {
-		const heroHole = Array.isArray(meta?.heroHole) ? meta!.heroHole : ['??', '??'];
-		return [String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')] as const;
+	const hero = useMemo(() => {
+		const hero = Array.isArray(meta?.hero) ? meta!.hero : ['??', '??'];
+		return [String(hero[0] ?? '??'), String(hero[1] ?? '??')] as const;
 	}, [meta]);
 
 	const board = useMemo(() => {
@@ -49,7 +49,7 @@ function App() {
 				{board.join(' ')}
 			</div>
 			<div className="flex items-center justify-center">
-				{hole.join(' ')}
+				{hero.join(' ')}
 			</div>
 			<Button onClick={toggleDisplayMode}>Switch {displayMode === 'inline' ? 'PIP' : 'Inline'}</Button>
 		</div>

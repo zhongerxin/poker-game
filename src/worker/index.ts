@@ -71,44 +71,12 @@ const START_HAND_WIDGET = {
   html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
 } as const;
 
-const BOARD_WIDGET = {
-  id: "board.widget",
-  title: "公牌",
-  invoking: "正在发公牌…",
-  invoked: "公牌已发完",
-  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
-} as const;
-
-const SHUTDOWN_WIDGET = {
-  id: "shutdown.widget",
-  title: "摊牌",
-  invoking: "准备摊牌",
-  invoked: "已摊牌",
-  html: "<html><body><h1>开始s一手德州扑克</h1></body></html>",
-} as const;
-
 const START_HAND_WIDGET_META = {
   "openai/outputTemplate": START_HAND_WIDGET_URI,
   "openai/toolInvocation/invoking": START_HAND_WIDGET.invoking,
   "openai/toolInvocation/invoked": START_HAND_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": true,
-} as const;
-
-const BOARD_WIDGET_META = {
-  "openai/outputTemplate": START_HAND_WIDGET_URI,
-  "openai/toolInvocation/invoking": BOARD_WIDGET.invoking,
-  "openai/toolInvocation/invoked": BOARD_WIDGET.invoked,
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": false,
-} as const;
-
-const SHUTDOWN_WIDGET_META = {
-  "openai/outputTemplate": START_HAND_WIDGET_URI,
-  "openai/toolInvocation/invoking": SHUTDOWN_WIDGET.invoking,
-  "openai/toolInvocation/invoked": SHUTDOWN_WIDGET.invoked,
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": false,
 } as const;
 
 
@@ -185,6 +153,7 @@ server.registerTool(
       hero: { hole: [deck.pop()!, deck.pop()!] },
       ai: { hole: [deck.pop()!, deck.pop()!] },
     };
+    const hero = g.hero.hole!;
     await saveGame(g);
     return {
       content: [
@@ -200,7 +169,7 @@ server.registerTool(
       },
       _meta: {
         ...START_HAND_WIDGET_META,
-        heroHole: g.hero.hole,
+        hero,
       },
     };
   }
@@ -213,7 +182,6 @@ server.registerTool(
     title: "发公牌",
     annotations: { readOnlyHint: true },
     _meta: {
-      ...BOARD_WIDGET_META,
     },
     inputSchema: {
       stage: z.enum(STAGES).describe("要发牌的阶段，可选 flop/turn/river"),
@@ -227,6 +195,7 @@ server.registerTool(
       throw new Error(`未找到牌局 ${game_id}`);
     }
     const board = g.board;
+    const hero = g.hero.hole!;
     switch (stage) {
       case "flop": {
         if (board.length !== 0) {
@@ -239,8 +208,8 @@ server.registerTool(
           content: [{ type: "text", text: `Flop 已发：${board.join(" ")}` }],
           structuredContent: { game_id: game_id, stage, board, text: `Flop 已发：${board.join(" ")}` },
           _meta: {
-            ...BOARD_WIDGET_META,
             board,
+            hero
           },
         };
       }
@@ -255,8 +224,8 @@ server.registerTool(
           content: [{ type: "text", text: `Turn 已发：${turn}。当前公牌：${board.join(" ")}` }],
           structuredContent: { game_id: game_id, stage, board, text: `Turn 已发：${turn}。当前公牌：${board.join(" ")}` },
           _meta: {
-            ...BOARD_WIDGET_META,
             board,
+            hero
           },
         };
       }
@@ -271,8 +240,8 @@ server.registerTool(
           content: [{ type: "text", text: `River 已发：${river}。最终公牌：${board.join(" ")}` }],
           structuredContent: { game_id: game_id, stage, board, text: `River 已发：${river}。最终公牌：${board.join(" ")}` },
           _meta: {
-            ...BOARD_WIDGET_META,
             board,
+            hero
           },
         };
       }
@@ -286,7 +255,6 @@ server.registerTool(
     title: "摊牌",
     annotations: { readOnlyHint: true },
     _meta: {
-      ...SHUTDOWN_WIDGET_META,
     },
     inputSchema: {
       game_id: z.string().describe("这局牌的id，需要传入才知道应该怎样摊牌"),
@@ -314,7 +282,6 @@ server.registerTool(
         text: "已经进入摊牌阶段，公牌是 board，ai 拿的牌是 ai，用户拿的牌是 hero，请你通过比对公牌告诉用户谁赢了，并且计算下大家输赢后应该更新的筹码",
       },
       _meta: {
-        ...SHUTDOWN_WIDGET_META,
         board,
         ai,
         hero,
