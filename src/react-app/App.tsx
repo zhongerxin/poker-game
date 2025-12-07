@@ -22,6 +22,11 @@ function App() {
 		return [String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')] as const;
 	}, [meta]);
 
+	const board = useMemo(() => {
+		const board = Array.isArray(meta?.board) ? meta!.board : ['??', '??', '??', '??', '??'];
+		return [String(board[0] ?? '??'), String(board[1] ?? '??'), String(board[2] ?? '??'), String(board[3] ?? '??'), String(board[4] ?? '??')] as const;
+	}, [meta]);
+
 	const toggleDisplayMode = useCallback(async () => {
 		const api = window.openai;
 		if (!api?.requestDisplayMode || !displayMode) {
@@ -40,6 +45,9 @@ function App() {
 
 	return (
 		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800">
+			<div className="flex items-center justify-center">
+				{board.join(' ')}
+			</div>
 			<div className="flex items-center justify-center">
 				{hole.join(' ')}
 			</div>

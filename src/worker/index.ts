@@ -61,8 +61,6 @@ const STAGES = ["flop", "turn", "river"] as const;
 
 // 下面这些内容，其实主要是为了定义好，免得重复写的
 const START_HAND_WIDGET_URI = "ui://widget/start_hand.html";
-const BOARD_WIDGET_URI = "ui://widget/board.html";
-const SHUTDOWN_WIDGET_URI = "ui://widget/shutdown.html";
 
 
 const START_HAND_WIDGET = {
@@ -98,73 +96,48 @@ const START_HAND_WIDGET_META = {
 } as const;
 
 const BOARD_WIDGET_META = {
-  "openai/outputTemplate": BOARD_WIDGET_URI,
+  "openai/outputTemplate": START_HAND_WIDGET_URI,
   "openai/toolInvocation/invoking": BOARD_WIDGET.invoking,
   "openai/toolInvocation/invoked": BOARD_WIDGET.invoked,
   "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true,
+  "openai/resultCanProduceWidget": false,
 } as const;
 
 const SHUTDOWN_WIDGET_META = {
-  "openai/outputTemplate": SHUTDOWN_WIDGET_URI,
+  "openai/outputTemplate": START_HAND_WIDGET_URI,
   "openai/toolInvocation/invoking": SHUTDOWN_WIDGET.invoking,
   "openai/toolInvocation/invoked": SHUTDOWN_WIDGET.invoked,
   "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true,
+  "openai/resultCanProduceWidget": false,
 } as const;
 
-const listResources = [
+
+
+
+
+server.registerResource(
+  "start_hand.widget",
+  "ui://widget/start_hand.html",
   {
-    id: START_HAND_WIDGET.id,
-    uri: START_HAND_WIDGET_URI,
-    name: START_HAND_WIDGET.title,
+    title: "发牌",
     description: "开始一手德州扑克 Widget 的 HTML 模板。",
-    mimeType: "text/html+skybridge",
-    _meta: START_HAND_WIDGET_META,
-    text: START_HAND_WIDGET.html,
   },
-  {
-    id: BOARD_WIDGET.id,
-    uri: BOARD_WIDGET_URI,
-    name: BOARD_WIDGET.title,
-    description: "德州发公牌的 Widget 的 HTML 模板。",
-    mimeType: "text/html+skybridge",
-    _meta: BOARD_WIDGET_META,
-    text: BOARD_WIDGET.html,
-  },
-  {
-    id: SHUTDOWN_WIDGET.id,
-    uri: SHUTDOWN_WIDGET_URI,
-    name: SHUTDOWN_WIDGET.title,
-    description: "德州摊牌阶段的 Widget 的 HTML 模板。",
-    mimeType: "text/html+skybridge",
-    _meta: SHUTDOWN_WIDGET_META,
-    text: SHUTDOWN_WIDGET.html,
-  },
-];
+      async () => {
+        return {
+          contents: [
+            {
+              uri: "ui://widget/start_hand.html",
+              mimeType: "text/html+skybridge",
+              text: await getWidgetHtml(),
+              _meta: START_HAND_WIDGET_META
+            }
+          ]
+        };
+      }
+  );
 
 
-for (const resource of listResources) {
-  server.registerResource(
-    resource.id,
-    resource.uri,
-    {
-      title: resource.name,
-      description: resource.description,
-    },
-    async () => {
-      return {
-        contents: [
-          {
-            uri: resource.uri,
-            mimeType: resource.mimeType,
-            text: await getWidgetHtml(),
-            _meta: resource._meta
-          }
-        ]
-      };
-    });
-}
+
 
 //functions
 function makeDeck(): Card[] {
