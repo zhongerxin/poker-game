@@ -49,7 +49,7 @@ function App() {
 	}, [displayMode]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800">
+		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800 border-1 border-green-900 rounded-2xl p-4">
 			<div className="flex items-center justify-center">
 				{board.join(' ')}
 			</div>
