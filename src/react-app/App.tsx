@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button"
 
 function App() {
 	const [hole] = useState(() => {
+		console.log('window.openai', window.openai?.toolResponseMetadata);
 		const meta = window.openai?.toolResponseMetadata ?? {};
 		const heroHole = Array.isArray(meta.heroHole) ? meta.heroHole : ['??', '??'];
+		console.log('heroHole', heroHole);
 		return [String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')];
 	});
 
