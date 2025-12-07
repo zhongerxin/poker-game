@@ -6,19 +6,26 @@
 // import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
 // import honoLogo from "./assets/hono.svg";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import "./App.css";
 import { Button } from "@/components/ui/button"
 
 
 function App() {
-	const [hole] = useState(() => {
-		console.log('window.openai', window.openai?.toolResponseMetadata);
+	const [hole, setHole] = useState<[string, string]>(['??', '??']);
+
+	const syncHole = useCallback(() => {
 		const meta = window.openai?.toolResponseMetadata ?? {};
 		const heroHole = Array.isArray(meta.heroHole) ? meta.heroHole : ['??', '??'];
-		console.log('heroHole', heroHole);
-		return [String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')];
-	});
+		setHole([String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')]);
+	}, []);
+
+	useEffect(() => {
+		// 监听 openai:set_globals，等待宿主推送更新
+		const handler = () => syncHole();
+		window.addEventListener('openai:set_globals', handler);
+		return () => window.removeEventListener('openai:set_globals', handler);
+	}, [syncHole]);
 
 	const [displayMode, setDisplayMode] = useState<'inline' | 'pip'>('inline');
 	const toggleDisplayMode = useCallback(async () => {
