@@ -10,6 +10,8 @@ import { useMemo, useCallback } from 'react';
 import "./App.css";
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
+import { PictureInPicture2 } from "lucide-react"
+import Card from './Card';
 
 
 
@@ -49,17 +51,19 @@ function App() {
 	}, [displayMode]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800 border-1 border-green-900 rounded-2xl p-4">
-			<div className="flex items-center justify-center">
-				{board.join(' ')}
+		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-4xl p-4">
+			<div className="flex items-center justify-center -space-x-5">
+				{ai.map((v) => <Card key={v} value={v} />)}
 			</div>
-			<div className="flex items-center justify-center">
-				{hero.join(' ')}
+			<div className="flex items-center justify-center -space-x-3">
+				{board.map((v) => <Card key={v} value={v} />)}
 			</div>
-			<div className="flex items-center justify-center">
-				{ai.join(' ')}
+			<div className="flex items-center justify-center -space-x-5">
+				{hero.map((v) => <Card key={v} value={v} />)}
 			</div>
-			<Button onClick={toggleDisplayMode}>Switch {displayMode === 'inline' ? 'PIP' : 'Inline'}</Button>
+			<Button variant="ghost" className="absolute top-6 right-6 rounded-full" size="icon" onClick={toggleDisplayMode}>
+				<PictureInPicture2 className="h-6 w-6" />
+			</Button>
 		</div>
 	);
 }
