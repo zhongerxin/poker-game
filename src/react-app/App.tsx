@@ -6,38 +6,33 @@
 // import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
 // import honoLogo from "./assets/hono.svg";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useMemo, useCallback } from 'react';
 import "./App.css";
 import { Button } from "@/components/ui/button"
+import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
+
 
 
 function App() {
-	const [hole, setHole] = useState<[string, string]>(['??', '??']);
+	const meta = useToolResponseMetadata();
+	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
-	const syncHole = useCallback(() => {
-		const meta = window.openai?.toolResponseMetadata ?? {};
-		const heroHole = Array.isArray(meta.heroHole) ? meta.heroHole : ['??', '??'];
-		setHole([String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')]);
-	}, []);
+	const hole = useMemo(() => {
+		const heroHole = Array.isArray(meta?.heroHole) ? meta!.heroHole : ['??', '??'];
+		return [String(heroHole[0] ?? '??'), String(heroHole[1] ?? '??')] as const;
+	}, [meta]);
 
-	useEffect(() => {
-		// 监听 openai:set_globals，等待宿主推送更新
-		const handler = () => syncHole();
-		window.addEventListener('openai:set_globals', handler);
-		return () => window.removeEventListener('openai:set_globals', handler);
-	}, [syncHole]);
-
-	const [displayMode, setDisplayMode] = useState<'inline' | 'pip'>('inline');
 	const toggleDisplayMode = useCallback(async () => {
 		const api = window.openai;
-		if (!api?.requestDisplayMode) {
+		if (!api?.requestDisplayMode || !displayMode) {
 			console.warn('当前环境不支持切换 pip/inline');
 			return;
 		}
 		const next = displayMode === 'inline' ? 'pip' : 'inline';
 		try {
-			await api.requestDisplayMode({ mode: next });
-			setDisplayMode(next);
+			const { mode } = await api.requestDisplayMode({ mode: next });
+			// 不需要手动 setState，宿主更新后会派发 set_globals，useDisplayMode 会自动刷新
+			console.log('切换结果：', mode);
 		} catch (err) {
 			console.error('切换 widget 形态失败：', err);
 		}
