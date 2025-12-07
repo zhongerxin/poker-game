@@ -20,17 +20,20 @@ function App() {
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
 	const hero = useMemo(() => {
-		const hero = Array.isArray(meta?.hero) ? meta!.hero : ['??', '??'];
+		console.log('hero', meta?.hero);
+		const hero = Array.isArray(meta?.hero) ? meta!.hero : [];
 		return [String(hero[0] ?? '??'), String(hero[1] ?? '??')] as const;
 	}, [meta]);
 
 	const ai = useMemo(() => {
-		const ai = Array.isArray(meta?.ai) ? meta!.ai : ['??', '??'];
+		console.log('ai', meta?.ai);
+		const ai = Array.isArray(meta?.ai) ? meta!.ai : [];
 		return [String(ai[0] ?? '??'), String(ai[1] ?? '??')] as const;
 	}, [meta]);
 
 	const board = useMemo(() => {
-		const board = Array.isArray(meta?.board) ? meta!.board : ['??', '??', '??', '??', '??'];
+		console.log('board', meta?.board);
+		const board = Array.isArray(meta?.board) ? meta!.board : [];
 		return [String(board[0] ?? '??'), String(board[1] ?? '??'), String(board[2] ?? '??'), String(board[3] ?? '??'), String(board[4] ?? '??')] as const;
 	}, [meta]);
 
@@ -51,7 +54,7 @@ function App() {
 	}, [displayMode]);
 
 	return (
-		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-4xl p-4">
+		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-[32px] p-4">
 			<div className="flex items-center justify-center -space-x-5">
 				{ai.map((v) => <Card key={v} value={v} />)}
 			</div>
@@ -61,7 +64,7 @@ function App() {
 			<div className="flex items-center justify-center -space-x-5">
 				{hero.map((v) => <Card key={v} value={v} />)}
 			</div>
-			<Button variant="ghost" className="absolute top-6 right-6 rounded-full" size="icon" onClick={toggleDisplayMode}>
+			<Button variant="ghost" className="absolute top-6 right-6 rounded-full text-white" size="icon" onClick={toggleDisplayMode}>
 				<PictureInPicture2 className="h-6 w-6" />
 			</Button>
 		</div>
