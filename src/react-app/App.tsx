@@ -36,10 +36,10 @@ function App() {
 
 	return (
 		<>
-			<div className="flex items-center justify-center">
-				{hole.join(' ')}
-			</div>
 			<div className="flex min-h-svh flex-col items-center justify-center bg-green-800">
+				<div className="flex items-center justify-center">
+					{hole.join(' ')}
+				</div>
 				<Button onClick={toggleDisplayMode}>Switch {displayMode === 'inline' ? 'PIP' : 'Inline'}</Button>
     		</div>
 		</>
