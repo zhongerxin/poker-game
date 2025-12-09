@@ -10,8 +10,8 @@ import { env } from "cloudflare:workers";
 
 
 
-const getWidgetHtml = async () => {
-  const html = await (await env.ASSETS.fetch("http://localhost/")).text();
+const getWidgetHtml = async (path: string) => {
+  const html = await (await env.ASSETS.fetch(`http://localhost/${path}`)).text();
 //   html = html.replace(
 //     "<!--RUNTIME_CONFIG-->",
 //     `<script>window.HOST = \`${host}\`;</script>`
@@ -128,7 +128,7 @@ server.registerResource(
             {
               uri: "ui://widget/start_hand.html",
               mimeType: "text/html+skybridge",
-              text: await getWidgetHtml(),
+              text: await getWidgetHtml("stage.html"),
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }

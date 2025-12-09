@@ -6,12 +6,14 @@
 // import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
 // import honoLogo from "./assets/hono.svg";
 
-import { useMemo, useCallback } from 'react';
-import "./App.css";
+import { useMemo, useCallback, StrictMode } from 'react';
+import "./index.css";
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
 import { PictureInPicture2 } from "lucide-react"
 import Card from './Card';
+import { createRoot } from "react-dom/client";
+
 
 
 
@@ -19,23 +21,6 @@ function App() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
-	// const hero = useMemo(() => {
-	// 	console.log('hero', meta?.hero);
-	// 	const hero = Array.isArray(meta?.hero) ? meta!.hero : [];
-	// 	return [String(hero[0] ?? '??'), String(hero[1] ?? '??')] as const;
-	// }, [meta]);
-
-	// const ai = useMemo(() => {
-	// 	console.log('ai', meta?.ai);
-	// 	const ai = Array.isArray(meta?.ai) ? meta!.ai : [];
-	// 	return [String(ai[0] ?? '??'), String(ai[1] ?? '??')] as const;
-	// }, [meta]);
-
-	// const board = useMemo(() => {
-	// 	console.log('board', meta?.board);
-	// 	const board = Array.isArray(meta?.board) ? meta!.board : [];
-	// 	return [String(board[0] ?? '??'), String(board[1] ?? '??'), String(board[2] ?? '??'), String(board[3] ?? '??'), String(board[4] ?? '??')] as const;
-	// }, [meta]);
 	const board = useMemo(() => {
 		const raw = Array.isArray(meta?.board) ? meta.board.slice(0, 5) : [];
 		return Array.from({ length: 5 }, (_, i) => String(raw[i] ?? '??'));
@@ -85,5 +70,10 @@ function App() {
 		</div>
 	);
 }
+export default App
 
-export default App;
+createRoot(document.getElementById("root")!).render(
+	<StrictMode>
+		<App />
+	</StrictMode>,
+);
