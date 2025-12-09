@@ -1,9 +1,6 @@
 import { createMcpHandler } from "agents/mcp";
 import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-// import startHandHtml from "./widget/start_hand.html";
-// import boardHtml from "./widget/board.html";
-// import shutdownHtml from "./widget/shutdown.html";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
 // import { env } from "cloudflare:workers";

@@ -15,7 +15,7 @@
 		"@modelcontextprotocol/sdk": "^1.24.3",
 		"@radix-ui/react-slot": "^1.2.4",
 		"@tailwindcss/vite": "^4.1.17",
-		"agents": "^0.2.30",
+		"agents": "^0.2.31",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"hono": "4.10.7",
