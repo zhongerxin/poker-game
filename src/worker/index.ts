@@ -149,7 +149,7 @@ server.registerResource(
         {
           uri: "ui://widget/tableConfig.html",
           mimeType: "text/html+skybridge",
-          text: "<div>选择筹码池</div>",
+          text: await getWidgetHtml("tableConfig"),
           _meta: {
             "openai/widgetPrefersBorder": true,
           }
