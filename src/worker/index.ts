@@ -8,6 +8,7 @@ import { env } from "cloudflare:workers";
 
 
 const getWidgetHtml = async (path: string) => {
+  console.log(path);
   const html = await (await env.ASSETS.fetch(`http://localhost/`)).text();
 //   html = html.replace(
 //     "<!--RUNTIME_CONFIG-->",
