@@ -6,18 +6,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 // import shutdownHtml from "./widget/shutdown.html";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
-import { env } from "cloudflare:workers";
+// import { env } from "cloudflare:workers";
 
 
 
-const getWidgetHtml = async (path: string) => {
-  const html = await (await env.ASSETS.fetch(`http://localhost/${path}`)).text();
-//   html = html.replace(
-//     "<!--RUNTIME_CONFIG-->",
-//     `<script>window.HOST = \`${host}\`;</script>`
-//   );
-  return html;
-};
+// const getWidgetHtml = async (path: string) => {
+//   const html = await (await env.ASSETS.fetch(`http://localhost/${path}`)).text();
+// //   html = html.replace(
+// //     "<!--RUNTIME_CONFIG-->",
+// //     `<script>window.HOST = \`${host}\`;</script>`
+// //   );
+//   return html;
+// };
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
@@ -128,7 +128,7 @@ server.registerResource(
             {
               uri: "ui://widget/start_hand.html",
               mimeType: "text/html+skybridge",
-              text: await getWidgetHtml("stage"),
+              text: "<html><body><h1>开始一手德州扑克</h1></body></html>",
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }
