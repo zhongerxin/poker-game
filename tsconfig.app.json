@@ -30,5 +30,5 @@
 			]
 		}
 	},
-	"include": ["src/react-app"]
+	"include": ["src/react-app", "src/worker/html.d.ts"]
 }

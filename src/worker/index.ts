@@ -5,8 +5,8 @@ import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
 // import { env } from "cloudflare:workers";
 
-import tableHtml from "./assets/table.html?raw";
-import tableConfigHtml from "./assets/tableConfig.html?raw";
+import tableHtml from "./table.html?raw";
+import tableConfigHtml from "./tableConfig.html?raw";
 
 
 
