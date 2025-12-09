@@ -5,8 +5,8 @@ import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
 // import { env } from "cloudflare:workers";
 
-import tableHtml from "./table.html?raw";
-import tableConfigHtml from "./tableConfig.html?raw";
+// import tableHtml from "./table.html?raw";
+// import tableConfigHtml from "./tableConfig.html?raw";
 
 
 
@@ -148,7 +148,7 @@ server.registerResource(
         {
           uri: "ui://widget/tableConfig.html",
           mimeType: "text/html+skybridge",
-          text: tableConfigHtml,
+          text: "<html><body><h1>开始一手德州扑克</h1></body></html>",
           _meta: {
             "openai/widgetPrefersBorder": true,
           }
@@ -171,7 +171,7 @@ server.registerResource(
             {
               uri: "ui://widget/table.html",
               mimeType: "text/html+skybridge",
-              text: tableHtml,
+              text: "<html><body><h1>开始一手德州扑克</h1></body></html>",
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }
