@@ -3,18 +3,18 @@ import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
-// import { env } from "cloudflare:workers";
+import { env } from "cloudflare:workers";
 
 // import tableHtml from "./table.html?raw";
 // import tableConfigHtml from "./tableConfig.html?raw";
 
 
 
-// const getWidgetHtml = async (path: string) => {
-//   console.log(path);
-//   const html = await (await env.ASSETS.fetch(`http://localhost/${path}.html`)).text();
-//   return html;
-// };
+const getWidgetHtml = async (path: string) => {
+  console.log(path);
+  const html = await (await env.ASSETS.fetch(`http://localhost/${path}.html`)).text();
+  return html;
+};
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
@@ -148,7 +148,7 @@ server.registerResource(
         {
           uri: "ui://widget/tableConfig.html",
           mimeType: "text/html+skybridge",
-          text: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+          text: await getWidgetHtml("tableConfig"),
           _meta: {
             "openai/widgetPrefersBorder": true,
           }
@@ -171,7 +171,7 @@ server.registerResource(
             {
               uri: "ui://widget/table.html",
               mimeType: "text/html+skybridge",
-              text: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+              text: await getWidgetHtml("table"),
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }
