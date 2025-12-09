@@ -8,7 +8,7 @@ import { env } from "cloudflare:workers";
 
 
 const getWidgetHtml = async (path: string) => {
-  const html = await (await env.ASSETS.fetch(`http://localhost/${path}`)).text();
+  const html = await (await env.ASSETS.fetch(`http://localhost/${path}.html`)).text();
 //   html = html.replace(
 //     "<!--RUNTIME_CONFIG-->",
 //     `<script>window.HOST = \`${host}\`;</script>`
@@ -67,12 +67,12 @@ export interface GameState {
 const STAGES = ["flop", "turn", "river"] as const;
 
 // 下面这些内容，其实主要是为了定义好，免得重复写的
-const TABLE_CONFIG_WIDGET_URI = "ui://widget/table-config.html";
+const TABLE_CONFIG_WIDGET_URI = "ui://widget/tableConfig.html";
 const START_HAND_WIDGET_URI = "ui://widget/table.html";
 
 
 const TABLE_CONFIG_WIDGET = {
-  id: "table-config.widget",
+  id: "tableConfig.widget",
   title: "选择筹码池",
   invoking: "正在选择筹码池…",
   invoked: "筹码池已选择",
@@ -136,8 +136,8 @@ const SHUTDOWN_WIDGET_META = {
 
 
 server.registerResource(
-  "table-config.widget",
-  "ui://widget/table-config.html",
+  "tableConfig.widget",
+  "ui://widget/tableConfig.html",
   {
     title: "选择筹码池",
     description: "选择筹码池 Widget 的 HTML 模板。",
@@ -146,9 +146,9 @@ server.registerResource(
     return {
       contents: [
         {
-          uri: "ui://widget/table-config.html",
+          uri: "ui://widget/tableConfig.html",
           mimeType: "text/html+skybridge",
-          text: await getWidgetHtml("table-config"),
+          text: await getWidgetHtml("tableConfig"),
           _meta: {
             "openai/widgetPrefersBorder": true,
           }

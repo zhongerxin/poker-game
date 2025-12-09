@@ -8,8 +8,8 @@ import { resolve } from 'path';
 
 export default defineConfig(()=>{
     const htmlInputs = {
-        table: resolve(__dirname, 'table.html'),
-		chip: resolve(__dirname, 'table-config.html'),
+		table: resolve(__dirname, 'table.html'),
+		tableConfig: resolve(__dirname, 'tableConfig.html'),
     };
     return {
         plugins: [react(), cloudflare(), viteSingleFile({ useRecommendedBuildConfig: false }), tailwindcss()],
