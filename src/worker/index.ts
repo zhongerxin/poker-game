@@ -121,7 +121,7 @@ server.registerResource(
             {
               uri: "ui://widget/start_hand.html",
               mimeType: "text/html+skybridge",
-              text: await getWidgetHtml("stage"),
+              text: await getWidgetHtml("chip"),
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }
