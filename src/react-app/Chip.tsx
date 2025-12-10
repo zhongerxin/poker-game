@@ -76,7 +76,7 @@ function Chip() {
 		</div>
 	);
 }
-// export default Chip
+export default Chip
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
