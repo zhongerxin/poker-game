@@ -4,8 +4,10 @@ import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
-import tableHtml from "../../web/dist/table.html";
-import tableConfigHtml from "../../web/dist/tableConfig.html";
+import tableJs from "../../web/dist/table.js";
+import tableConfigJs from "../../web/dist/tableConfig.js";
+import clientJs from "../../web/dist/client.js";
+import clientCss from "../../web/dist/client.css";
 
 export interface Env {
   POKER_DO: DurableObjectNamespace;
@@ -16,9 +18,20 @@ const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
 type DurableEnv = Env;
 
-const TABLE_WIDGET_HTML = tableHtml.trim();
-const TABLE_CONFIG_WIDGET_HTML = tableConfigHtml.trim();
-console.log('[widget] tableConfig length:', TABLE_CONFIG_WIDGET_HTML.length);
+const TABLE_WIDGET_HTML = `
+  <div id="root"></div>
+  <style>${clientCss}</style>
+  <script type="module">${clientJs}</script>
+  <script type="module">${tableJs}</script>
+`.trim();
+
+const TABLE_CONFIG_WIDGET_HTML = `
+  <div id="root"></div>
+  <style>${clientCss}</style>
+  <script type="module">${clientJs}</script>
+  <script type="module">${tableConfigJs}</script>
+`.trim();
+console.log("[widget] tableConfig length:", TABLE_CONFIG_WIDGET_HTML.length);
 
 // 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
 export let pokerNamespace: DurableObjectNamespace | undefined;

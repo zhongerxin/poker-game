@@ -19,9 +19,9 @@ export default defineConfig({
         tableConfig: path.resolve(__dirname, 'tableConfig.html'),
       },
       output: {
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]',
-        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: '[name].js',      // -> table.js / tableConfig.js
+        chunkFileNames: 'client.js',      // vendor/runtime bundle，固定名方便 Worker 引用
+        assetFileNames: '[name].[ext]',   // css -> client.css
       },
     },
   },
