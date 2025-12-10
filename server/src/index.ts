@@ -17,6 +17,7 @@ type DurableEnv = Env;
 
 const TABLE_WIDGET_HTML = tableHtml.trim();
 const TABLE_CONFIG_WIDGET_HTML = tableConfigHtml.trim();
+console.log('[widget] tableConfig length:', TABLE_CONFIG_WIDGET_HTML.length);
 
 // 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
 export let pokerNamespace: DurableObjectNamespace | undefined;
