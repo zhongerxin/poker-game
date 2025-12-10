@@ -1,11 +1,3 @@
-// src/Stage.tsx
-
-// import { useState } from "react";
-// import reactLogo from "./assets/react.svg";
-// import viteLogo from "./assets/vite.svg";
-// import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
-// import honoLogo from "./assets/hono.svg";
-
 import { useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
@@ -24,15 +16,24 @@ function Table() {
 		return Array.from({ length: 5 }, (_, i) => String(raw[i] ?? '??'));
 	}, [meta]);
 
-	const hero = useMemo(() => {
-		const raw = Array.isArray(meta?.hero) ? meta.hero.slice(0, 2) : [];
+	const hero_hole = useMemo(() => {
+		const raw = Array.isArray(meta?.hero_hole) ? meta.hero_hole.slice(0, 2) : [];
 		return Array.from({ length: 2 }, (_, i) => String(raw[i] ?? '??'));
 	}, [meta]);
 
-	const ai = useMemo(() => {
-		const raw = Array.isArray(meta?.ai) ? meta.ai.slice(0, 2) : [];
+	const ai_hole = useMemo(() => {
+		const raw = Array.isArray(meta?.ai_hole) ? meta.ai_hole.slice(0, 2) : [];
 		return Array.from({ length: 2 }, (_, i) => String(raw[i] ?? '??'));
 	}, [meta]);
+
+	const toNumber = useCallback((value: unknown) => {
+		const n = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(n) ? n : 0;
+	}, []);
+
+	const pot = useMemo(() => toNumber(meta?.pot), [meta, toNumber]);
+	const ai_stack = useMemo(() => toNumber(meta?.ai_stack), [meta, toNumber]);
+	const hero_stack = useMemo(() => toNumber(meta?.hero_stack), [meta, toNumber]);
 
 
 	const toggleDisplayMode = useCallback(async () => {
@@ -54,14 +55,17 @@ function Table() {
 	return (
 		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-[24px] p-4">
 			<div className="flex items-center justify-center -space-x-5">
-				{ai.map((v, i) => <Card key={i} value={v} />)}
+				{ai_hole.map((v, i) => <Card key={i} value={v} />)}
 			</div>
 			<div className="flex items-center justify-center -space-x-3">
 				{board.map((v, i) => <Card key={i} value={v} />)}
 			</div>
 			<div className="flex items-center justify-center -space-x-5">
-				{hero.map((v, i) => <Card key={i} value={v} />)}
+				{hero_hole.map((v, i) => <Card key={i} value={v} />)}
 			</div>
+			<span className='text-white text-lg absolute bottom-6 left-6'>pot: {pot}</span>
+			<span className='text-white text-lg absolute bottom-12 left-6'>AI stack: {ai_stack}</span>
+			<span className='text-white text-lg absolute bottom-6 right-6'>Hero stack: {hero_stack}</span>
 			<Button variant="ghost" className="absolute top-6 right-6 rounded-full text-white" size="icon" onClick={toggleDisplayMode}>
 				<PictureInPicture2 className="h-6 w-6" />
 			</Button>
