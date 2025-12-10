@@ -17,7 +17,7 @@ import { createRoot } from "react-dom/client";
 
 
 
-function Stage() {
+function App() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
@@ -70,10 +70,10 @@ function Stage() {
 		</div>
 	);
 }
-export default Stage
+export default App
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<Stage />
+		<App />
 	</StrictMode>,
 );
