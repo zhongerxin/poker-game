@@ -65,7 +65,7 @@ const START_HAND_WIDGET = {
   title: "开始一手德州扑克",
   invoking: "正在开始一手德州扑克…",
   invoked: "德州扑克已开始",
-  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+  html: "<html><body><h1>开始一手 德州扑克</h1></body></html>",
 } as const;
 
 const BOARD_WIDGET = {
