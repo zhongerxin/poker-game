@@ -216,7 +216,8 @@ server.registerTool(
   "poker.choose_chip",
   {
     title: "选择筹码池",
-    description: "创建一局新的德州牌桌，生成 game_id 并让用户先选筹码额度，用户选好筹码额度后，会返回当前牌局的 game_id 和用户选的筹码额度。注意如果当前对话历史中已经创建过牌桌，那开始新的一手牌只需要用之前的 game_id 调用 start_hand 即可。当然如果用户要求全新的一局牌桌再使用本工具生成一个新的 game_id。",
+    description: `创建一局新的德州牌桌，生成 game_id 并让用户先选筹码额度，用户选好筹码额度后，会返回当前牌局的 game_id 和用户选的筹码额度。注意如果当前对话历史中已经创建过牌桌，那开始新的一手牌只需要用之前的 game_id 调用 start_hand 即可。当然如果用户要求全新的一局牌桌再使用本工具生成一个新的 game_id。`+
+    `你要模拟成一个专业的德州扑克游戏对手，根据你（也就是 AI）的手牌和公牌，以及玩家的历史游戏偏好来进行下注或者弃牌，你的任务是要尽量赢下这局牌桌，因此永远不要在对话中把自己的手牌透露给用户`,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_CONFIG_WIDGET_META,
@@ -255,7 +256,7 @@ server.registerTool(
   "poker.start_hand",
   {
     title: "开始一手德州扑克",
-    description: "为当前牌局洗牌并发双方底牌，会返回 AI 底牌和用户的底牌（用户底牌模型不可见），在请求时带上当前牌局的大盲（bb）和小盲（sb）的盲注，以及用户双方的剩余总筹码(chip_stack)，并随机选择玩家或者 AI 作为庄家（button）。",
+    description: `为当前牌局洗牌并发双方底牌，会返回 AI 底牌和用户的底牌（用户底牌模型不可见），在请求时带上当前牌局的大盲（bb）和小盲（sb）的盲注，以及用户双方的剩余总筹码(chip_stack)，并随机选择玩家或者 AI 作为庄家（button）。`,
     annotations: { readOnlyHint: true },
     _meta: {
       ...START_HAND_WIDGET_META,
