@@ -8,7 +8,11 @@ import { env } from "cloudflare:workers";
 
 
 const getWidgetHtml = async (widget: string) => {
-  const html = await (await env.ASSETS.fetch(`http://localhost?widget=${widget}`)).text();
+  let html = await (await env.ASSETS.fetch('http://localhost')).text();
+  html = html.replace(
+    '<script type="module"',
+    `<script>window.__WIDGET_DEFAULT__="${widget}"</script><script type="module"`
+  );
   return html;
 };
 

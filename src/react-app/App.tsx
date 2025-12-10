@@ -5,14 +5,18 @@ import Start from './Start';
 import { createRoot } from "react-dom/client";
 
 
+interface Window {
+	__WIDGET_DEFAULT__?: string;
+}
 
+const injected = (globalThis as Window).__WIDGET_DEFAULT__;
 const params = new URLSearchParams(location.search);
-const view = (params.get('widget') || 'start').toLowerCase();
-const View = view === 'table' ? Table : Start;
+const view = (injected ?? params.get('widget') ?? 'start').toLowerCase();
+const Widget = view === 'table' ? Table : Start;
 
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<View />
+		<Widget />
 	</StrictMode>,
 );
