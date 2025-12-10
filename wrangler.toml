@@ -1,0 +1,25 @@
+name = "poker-game"
+main = "server/dist/index.js"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [
+  { name = "POKER_DO", class_name = "PokerDO" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PokerDO"]
+
+[[rules]]
+globs = ["web/dist/*.js"]
+type = "Text"
+
+[[rules]]
+globs = ["web/dist/*.css"]
+type = "Text"
+
+[[rules]]
+globs = ["web/dist/*.html"]
+type = "Text"

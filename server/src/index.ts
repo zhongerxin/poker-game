@@ -1,24 +1,22 @@
+import type { ExecutionContext } from "@cloudflare/workers-types";
 import { createMcpHandler } from "agents/mcp";
 import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
-import { env } from "cloudflare:workers";
+import tableHtml from "../../web/dist/table.html";
+import tableConfigHtml from "../../web/dist/tableConfig.html";
 
-// import tableHtml from "./table.html?raw";
-// import tableConfigHtml from "./tableConfig.html?raw";
-
-
-
-const getWidgetHtml = async (path: string) => {
-  console.log(path);
-  const html = await (await env.ASSETS.fetch(`http://localhost/${path}.html`)).text();
-  return html;
-};
+export interface Env {
+  POKER_DO: DurableObjectNamespace;
+}
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
-type DurableEnv = Env & { POKER_DO: DurableObjectNamespace };
+type DurableEnv = Env;
+
+const TABLE_WIDGET_HTML = tableHtml.trim();
+const TABLE_CONFIG_WIDGET_HTML = tableConfigHtml.trim();
 
 // 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
 export let pokerNamespace: DurableObjectNamespace | undefined;
@@ -148,7 +146,7 @@ server.registerResource(
         {
           uri: "ui://widget/tableConfig.html",
           mimeType: "text/html+skybridge",
-          text: await getWidgetHtml("tableConfig"),
+          text: TABLE_CONFIG_WIDGET_HTML,
           _meta: {
             "openai/widgetPrefersBorder": true,
           }
@@ -171,7 +169,7 @@ server.registerResource(
             {
               uri: "ui://widget/table.html",
               mimeType: "text/html+skybridge",
-              text: await getWidgetHtml("table"),
+              text: TABLE_WIDGET_HTML,
               _meta: {
                 "openai/widgetPrefersBorder": true,
               }
