@@ -9,6 +9,7 @@ import tableConfigHtml from "../../web/dist/tableConfig.html";
 
 export interface Env {
   POKER_DO: DurableObjectNamespace;
+  ASSETS: Fetcher;
 }
 
 const server = new McpServer({ name: "Poker", version: "v1.0.0" });
@@ -533,6 +534,9 @@ export default {
     // 将当前请求的 POKER_DO 绑定保存下来，供 getPokerStub 等函数使用
     pokerNamespace = env.POKER_DO;
     const url = new URL(req.url);
+    if (url.pathname === "/table" || url.pathname === "/tableConfig" || url.pathname.startsWith("/assets/")) {
+      return env.ASSETS.fetch(req);
+    }
     if (url.pathname.startsWith("/mcp")) return mcpHandler(req, env, ctx);
 
     return (

@@ -1,15 +1,10 @@
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 
-const htmlInputs = {
-  table: path.resolve(__dirname, 'table.html'),
-  tableConfig: path.resolve(__dirname, 'tableConfig.html'),
-};
-
-export default {
-  plugins: [react(), tailwindcss(), viteSingleFile({ useRecommendedBuildConfig: false })],
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
   base: './',
   resolve: {
     alias: {
@@ -18,15 +13,16 @@ export default {
   },
   build: {
     outDir: 'dist',
-    cssCodeSplit: false,
-    minify: false,
     rollupOptions: {
-      input: htmlInputs,
+      input: {
+        table: path.resolve(__dirname, 'table.html'),
+        tableConfig: path.resolve(__dirname, 'tableConfig.html'),
+      },
       output: {
-        entryFileNames: '[name].html',
-        assetFileNames: '[name].[ext]',
-        // 保持默认的代码分割，单文件插件会内联资源
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+        chunkFileNames: 'assets/[name]-[hash].js',
       },
     },
   },
-};
+});
