@@ -13,13 +13,5 @@ tag = "v1"
 new_sqlite_classes = ["PokerDO"]
 
 [[rules]]
-globs = ["web/dist/*.js"]
-type = "Text"
-
-[[rules]]
-globs = ["web/dist/*.css"]
-type = "Text"
-
-[[rules]]
-globs = ["web/dist/*.html"]
+globs = ["web/dist/*.js", "web/dist/*.css", "web/dist/*.html"]
 type = "Text"

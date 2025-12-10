@@ -11,7 +11,7 @@
 		"build": "npm run build:web && npm run build:server",
 		"build:web": "npm --workspace web run build",
 		"build:server": "npm --workspace server run build",
-		"dev": "npm run build:web && npm run build:server && XDG_CONFIG_HOME=.wrangler XDG_CACHE_HOME=.wrangler XDG_STATE_HOME=.wrangler wrangler dev --ip 127.0.0.1 --port 8787",
+		"dev": "npm --workspace web run dev",
 		"deploy": "npm run build && wrangler deploy",
 		"cf-typegen": "wrangler types"
 	},
