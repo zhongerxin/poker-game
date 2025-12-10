@@ -73,7 +73,7 @@ const BOARD_WIDGET = {
   title: "公牌",
   invoking: "正在发公牌…",
   invoked: "公牌已发完",
-  html: "<html><body><h1>开始一手德州扑克</h1></body></html>",
+  html: "<html><body><h1>开始一手德州扑的克</h1></body></html>",
 } as const;
 
 const SHUTDOWN_WIDGET = {
