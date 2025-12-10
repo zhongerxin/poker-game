@@ -4,13 +4,8 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
-import { resolve } from 'path';
 
 export default defineConfig(()=>{
-    const htmlInputs = {
-        stage: resolve(__dirname, 'stage.html'),
-        chip: resolve(__dirname, 'chip.html'),
-    };
     return {
         plugins: [react(), cloudflare(), viteSingleFile({ useRecommendedBuildConfig: true }), tailwindcss()],
         build: {
@@ -19,7 +14,6 @@ export default defineConfig(()=>{
         environments: {
             client: {
                 build: {
-                    rollupOptions: { input: htmlInputs},
                     cssCodeSplit: false,
                     assetsDir: '',
                 },

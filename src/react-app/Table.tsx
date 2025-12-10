@@ -6,18 +6,16 @@
 // import cloudflareLogo from "./assets/Cloudflare_Logo.svg";
 // import honoLogo from "./assets/hono.svg";
 
-import { useMemo, useCallback, StrictMode } from 'react';
-import "./index.css";
+import { useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
 import { PictureInPicture2 } from "lucide-react"
 import Card from './Card';
-import { createRoot } from "react-dom/client";
 
 
 
 
-function Chip() {
+function Table() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
 
@@ -64,22 +62,10 @@ function Chip() {
 			<div className="flex items-center justify-center -space-x-5">
 				{hero.map((v, i) => <Card key={i} value={v} />)}
 			</div>
-			<div className="flex items-center justify-center -space-x-3">
-				{board.map((v, i) => <Card key={i} value={v} />)}
-			</div>
-			<div className="flex items-center justify-center -space-x-5">
-				{hero.map((v, i) => <Card key={i} value={v} />)}
-			</div>
 			<Button variant="ghost" className="absolute top-6 right-6 rounded-full text-white" size="icon" onClick={toggleDisplayMode}>
 				<PictureInPicture2 className="h-6 w-6" />
 			</Button>
 		</div>
 	);
 }
-export default Chip
-
-createRoot(document.getElementById("root")!).render(
-	<StrictMode>
-		<Chip />
-	</StrictMode>,
-);
+export default Table
