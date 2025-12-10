@@ -108,10 +108,6 @@ const SHUTDOWN_WIDGET_META = {
   "openai/resultCanProduceWidget": false,
 } as const;
 
-
-
-
-
 server.registerResource(
   "start_hand.widget",
   "ui://widget/start_hand.html",
