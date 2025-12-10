@@ -8,7 +8,7 @@ import { env } from "cloudflare:workers";
 
 
 const getWidgetHtml = async (path: string) => {
-  const html = await (await env.ASSETS.fetch(`http://localhost/client/${path}`)).text();
+  const html = await (await env.ASSETS.fetch(`http://localhost/${path}`)).text();
 //   html = html.replace(
 //     "<!--RUNTIME_CONFIG-->",
 //     `<script>window.HOST = \`${host}\`;</script>`
