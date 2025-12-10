@@ -12,14 +12,14 @@ export default defineConfig(()=>{
         chip: resolve(__dirname, 'chip.html'),
     };
     return {
-        plugins: [react(), cloudflare(), viteSingleFile({ useRecommendedBuildConfig: false }), tailwindcss()],
+        plugins: [react(), cloudflare(), viteSingleFile({ useRecommendedBuildConfig: true }), tailwindcss()],
         build: {
             minify: false,
         },
         environments: {
             client: {
                 build: {
-                    rollupOptions: { input: htmlInputs, output: { inlineDynamicImports: false } },
+                    rollupOptions: { input: htmlInputs},
                     cssCodeSplit: false,
                     assetsDir: '',
                 },
