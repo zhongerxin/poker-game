@@ -28,7 +28,6 @@ function Start() {
 			await api.sendFollowUpMessage({
 				prompt: `选择牌局设置：BB/SB ${selected.payload.bb}/${selected.payload.sb}，总筹码 ${selected.payload.stack}`,
 			});
-			await toggleDisplayMode();
 			console.log('已发送牌局配置', selected.payload);
 		} catch (err) {
 			console.error('发送牌局配置失败：', err);

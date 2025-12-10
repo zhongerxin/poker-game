@@ -217,7 +217,7 @@ server.registerTool(
   {
     title: "选择筹码池",
     description: `创建一局新的德州牌桌，生成 game_id 并让用户先选筹码额度，用户选好筹码额度后，会返回当前牌局的 game_id 和用户选的筹码额度。注意如果当前对话历史中已经创建过牌桌，那开始新的一手牌只需要用之前的 game_id 调用 start_hand 即可。当然如果用户要求全新的一局牌桌再使用本工具生成一个新的 game_id。`+
-    `你要模拟成一个专业的德州扑克游戏对手，根据你（也就是 AI）的手牌和公牌，以及玩家的历史游戏偏好来进行下注或者弃牌，你的任务是要尽量赢下这局牌桌，因此永远不要在对话中把自己的手牌透露给用户`,
+    `你要模拟成一个专业的德州扑克游戏对手，你要模拟人性，甚至要学会诈唬或者露怯，而不是一个机器 AI。根据你（也就是 AI）的手牌和公牌，以及玩家的历史游戏偏好来进行下注或者弃牌，你的任务是要尽量赢下这局牌桌，因此永远不要在对话中把自己的手牌透露给用户`,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_CONFIG_WIDGET_META,
@@ -274,15 +274,15 @@ server.registerTool(
     const button = randomButton()
     // 根据谁是庄家，以及 bb,sb 数额计算下当前的 pot 和用户以及ai 的stack
     const pot = bb + sb;
-    const heroStack = button === "hero" ? stack - bb : stack - sb;
-    const aiStack = button === "ai" ? stack - bb : stack - sb;
+    const hero_stack = button === "hero" ? stack - bb : stack - sb;
+    const ai_stack = button === "ai" ? stack - bb : stack - sb;
 
     const g: GameState = {
       id: game_id,
       deck,
       board: [],
-      hero: { hole: [deck.pop()!, deck.pop()!], stack: heroStack },
-      ai: { hole: [deck.pop()!, deck.pop()!], stack: aiStack },
+      hero: { hole: [deck.pop()!, deck.pop()!], stack: hero_stack },
+      ai: { hole: [deck.pop()!, deck.pop()!], stack: ai_stack },
       bb,
       sb,
       button: button,
@@ -317,8 +317,8 @@ server.registerTool(
         ...START_HAND_WIDGET_META,
         hero_hole,
         pot,
-        heroStack,
-        aiStack,
+        hero_stack,
+        ai_stack,
       },
     };
   }
