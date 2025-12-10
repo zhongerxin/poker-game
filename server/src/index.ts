@@ -4,10 +4,6 @@ import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
-import tableJs from "../../web/dist/table.js";
-import tableConfigJs from "../../web/dist/tableConfig.js";
-import clientJs from "../../web/dist/client.js";
-import clientCss from "../../web/dist/client.css";
 
 export interface Env {
   POKER_DO: DurableObjectNamespace;
@@ -18,20 +14,21 @@ const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
 type DurableEnv = Env;
 
+const ASSET_BASE = "https://poker-game.zhongxin123456.workers.dev";
+
 const TABLE_WIDGET_HTML = `
   <div id="root"></div>
-  <style>${clientCss}</style>
-  <script type="module">${clientJs}</script>
-  <script type="module">${tableJs}</script>
+  <link rel="stylesheet" href="${ASSET_BASE}/assets/client.css">
+  <script type="module" src="${ASSET_BASE}/assets/client.js"></script>
+  <script type="module" src="${ASSET_BASE}/assets/table.js"></script>
 `.trim();
 
 const TABLE_CONFIG_WIDGET_HTML = `
   <div id="root"></div>
-  <style>${clientCss}</style>
-  <script type="module">${clientJs}</script>
-  <script type="module">${tableConfigJs}</script>
+  <link rel="stylesheet" href="${ASSET_BASE}/assets/client.css">
+  <script type="module" src="${ASSET_BASE}/assets/client.js"></script>
+  <script type="module" src="${ASSET_BASE}/assets/tableConfig.js"></script>
 `.trim();
-console.log("[widget] tableConfig length:", TABLE_CONFIG_WIDGET_HTML.length);
 
 // 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
 export let pokerNamespace: DurableObjectNamespace | undefined;
@@ -118,6 +115,11 @@ const TABLE_CONFIG_WIDGET_META = {
   "openai/toolInvocation/invoked": TABLE_CONFIG_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": true,
+  "openai/widgetDomain": "https://chatgpt.com",
+  "openai/widgetCSP": {
+    connect_domains: [],
+    resource_domains: [ASSET_BASE],
+  },
 } as const;
 
 const START_HAND_WIDGET_META = {
@@ -126,6 +128,11 @@ const START_HAND_WIDGET_META = {
   "openai/toolInvocation/invoked": START_HAND_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": true,
+  "openai/widgetDomain": "https://chatgpt.com",
+  "openai/widgetCSP": {
+    connect_domains: [],
+    resource_domains: [ASSET_BASE],
+  },
 } as const;
 
 const BOARD_WIDGET_META = {
@@ -134,6 +141,11 @@ const BOARD_WIDGET_META = {
   "openai/toolInvocation/invoked": BOARD_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": false,
+  "openai/widgetDomain": "https://chatgpt.com",
+  "openai/widgetCSP": {
+    connect_domains: [],
+    resource_domains: [ASSET_BASE],
+  },
 } as const;
 
 const SHUTDOWN_WIDGET_META = {
@@ -142,6 +154,11 @@ const SHUTDOWN_WIDGET_META = {
   "openai/toolInvocation/invoked": SHUTDOWN_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": false,
+  "openai/widgetDomain": "https://chatgpt.com",
+  "openai/widgetCSP": {
+    connect_domains: [],
+    resource_domains: [ASSET_BASE],
+  },
 } as const;
 
 
@@ -164,6 +181,11 @@ server.registerResource(
           text: TABLE_CONFIG_WIDGET_HTML,
           _meta: {
             "openai/widgetPrefersBorder": true,
+            "openai/widgetDomain": "https://chatgpt.com",
+            "openai/widgetCSP": {
+              connect_domains: [],
+              resource_domains: [ASSET_BASE],
+            },
           }
         }
       ]
@@ -178,20 +200,25 @@ server.registerResource(
     title: "发牌",
     description: "开始一手德州扑克 Widget 的 HTML 模板。",
   },
-      async () => {
-        return {
-          contents: [
-            {
-              uri: "ui://widget/table.html",
-              mimeType: "text/html+skybridge",
-              text: TABLE_WIDGET_HTML,
-              _meta: {
-                "openai/widgetPrefersBorder": true,
-              }
-            }
-          ]
-        };
-      }
+  async () => {
+    return {
+      contents: [
+        {
+          uri: "ui://widget/table.html",
+          mimeType: "text/html+skybridge",
+          text: TABLE_WIDGET_HTML,
+          _meta: {
+            "openai/widgetPrefersBorder": true,
+            "openai/widgetDomain": "https://chatgpt.com",
+            "openai/widgetCSP": {
+              connect_domains: [],
+              resource_domains: [ASSET_BASE],
+            },
+          }
+        }
+      ]
+    };
+  }
   );
 
 
