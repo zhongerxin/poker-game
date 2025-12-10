@@ -1,3 +1,5 @@
+// src/Chip.tsx
+
 import { useCallback, StrictMode, useState } from 'react';
 import './index.css';
 import { Button } from '@/components/ui/button';

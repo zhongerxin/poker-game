@@ -1,4 +1,4 @@
-// src/App.tsx
+// src/Stage.tsx
 
 // import { useState } from "react";
 // import reactLogo from "./assets/react.svg";
