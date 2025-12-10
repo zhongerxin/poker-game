@@ -315,6 +315,9 @@ server.registerTool(
       _meta: {
         ...START_HAND_WIDGET_META,
         hero_hole,
+        pot,
+        heroStack,
+        aiStack,
       },
     };
   }
