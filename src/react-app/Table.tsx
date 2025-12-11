@@ -53,7 +53,7 @@ function Table() {
 	}, [displayMode]);
 
 	return (
-		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-[24px] p-4">
+		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
 			<div className="flex items-center justify-center -space-x-5">
 				{ai_hole.map((v, i) => <Card key={i} value={v} />)}
 			</div>

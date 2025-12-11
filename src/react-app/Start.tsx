@@ -52,7 +52,7 @@ function Start() {
 	}, [displayMode]);
 
 	return (
-		<div className="relative flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] rounded-[24px] p-6 text-white">
+		<div className="relative flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-6 text-white">
 			<div className="text-center space-y-2">
 				<h1 className="text-2xl font-semibold">请选择牌局</h1>
 				<p className="text-sm opacity-80">你也可以直接和 AI 对话说明你想要的盲注和筹码</p>
