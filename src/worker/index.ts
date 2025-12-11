@@ -5,8 +5,6 @@ import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
 import { env } from "cloudflare:workers";
 
-
-
 const getWidgetHtml = async (widget: string) => {
   let html = await (await env.ASSETS.fetch('http://localhost')).text();
   html = html.replace(
