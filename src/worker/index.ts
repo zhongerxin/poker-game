@@ -286,8 +286,8 @@ server.registerTool(
         ...TABLE_WIDGET_META, 
         hero_hole,
         pot,
-        hero_stack,
-        ai_stack,
+        hero_stack: g.hero.stack,
+        ai_stack: g.ai.stack,
       },
     };
   }
