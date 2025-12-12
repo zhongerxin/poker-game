@@ -241,8 +241,8 @@ server.registerTool(
       game_id: z.string().describe("这局牌的id，需要传入才知道剩下的牌如何发"),
       bb: z.number().describe("大盲（bb）的盲注额度"),
       sb: z.number().describe("小盲（sb）的盲注额度"),
-      hero_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值用户的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后用户新的的筹码额度来赋值"),
-      ai_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值AI的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后AI新的的筹码额度来赋值"),
+      hero_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值用户的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后用户新的的筹码额度来赋值，此时的筹码 ai_stack 和 hero_stack 应该是不同的，因为上一场的输赢不同"),
+      ai_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值AI的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后AI新的的筹码额度来赋值，此时的筹码 ai_stack 和 hero_stack 应该是不同的，因为上一场的输赢不同"),
     }
   },
   async ({ game_id, bb, sb, hero_stack, ai_stack }) => {
