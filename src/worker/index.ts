@@ -246,8 +246,8 @@ server.registerTool(
     const button = randomButton()
     // 根据谁是庄家，以及 bb,sb 数额计算下当前的 pot 和用户以及ai 的stack
     const pot = bb + sb;
-    const new_hero_stack = button === "hero" ? hero_stack - bb : hero_stack - sb;
-    const new_ai_stack = button === "ai" ? ai_stack - bb : ai_stack - sb;
+    const new_hero_stack = button === "hero" ? hero_stack - sb : hero_stack - bb;
+    const new_ai_stack = button === "ai" ? ai_stack - sb : ai_stack - bb;
 
     const g: GameState = {
       id: game_id,
