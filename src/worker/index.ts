@@ -62,6 +62,7 @@ export interface GameState {
   sb?: number;
   bb?: number;
   button?: Button;
+  stage?: (typeof STAGES)[number];
 }
 
 // Stage 游戏阶段，flop 是发三张公牌，turn 是发第四张公牌，river 是发第五张公牌
@@ -314,17 +315,25 @@ server.registerTool(
     const board = g.board;
     const hero_hole = g.hero.hole!;
 
+    // 如果已经发过同一阶段的牌，再次调用时直接返回当前状态，避免重复发牌报错
+    const alreadyDealt =
+      (stage === "flop" && board.length >= 3) ||
+      (stage === "turn" && board.length >= 4) ||
+      (stage === "river" && board.length >= 5);
+
     switch (stage) {
       case "flop": {
-        if (board.length !== 0) {
-          throw new Error("翻牌已发。");
+
+        // 如果还没有发过翻牌，就发翻牌
+        if (!alreadyDealt) {
+          const flop = [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
+          board.push(...flop);
+          g.pot! += 2 * bet;
+          g.hero.stack! -= bet;
+          g.ai.stack! -= bet;
+          g.stage = stage;
+          await saveGame(g);
         }
-        const flop = [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
-        board.push(...flop);
-        g.pot! += 2 * bet;
-        g.hero.stack! -= bet;
-        g.ai.stack! -= bet;
-        await saveGame(g);
         return {
           content: [{
             type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
@@ -352,15 +361,16 @@ server.registerTool(
         };
       }
       case "turn": {
-        if (board.length !== 3) {
-          throw new Error("请先发翻牌。");
+        // 如果还没有发过转牌，就发转牌
+        if (!alreadyDealt) {
+          const turn = g.deck.pop()!;
+          board.push(turn);
+          g.pot! += 2 * bet;
+          g.hero.stack! -= bet;
+          g.ai.stack! -= bet;
+          g.stage = stage;
+          await saveGame(g);
         }
-        const turn = g.deck.pop()!;
-        board.push(turn);
-        g.pot! += 2 * bet;
-        g.hero.stack! -= bet;
-        g.ai.stack! -= bet;
-        await saveGame(g);
         return {
           content: [{
             type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
@@ -388,15 +398,16 @@ server.registerTool(
         };
       }
       case "river": {
-        if (board.length !== 4) {
-          throw new Error("请先发转牌。");
+        // 如果还没有发过河牌，就发河牌
+        if (!alreadyDealt) {
+          const river = g.deck.pop()!;
+          board.push(river);
+          g.pot! += 2 * bet;
+          g.hero.stack! -= bet;
+          g.ai.stack! -= bet;
+          g.stage = stage;
+          await saveGame(g);
         }
-        const river = g.deck.pop()!;
-        board.push(river);
-        g.pot! += 2 * bet;
-        g.hero.stack! -= bet;
-        g.ai.stack! -= bet;
-        await saveGame(g);
         return {
           content: [{
             type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
