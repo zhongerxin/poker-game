@@ -4,6 +4,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { PokerDO, loadGame, saveGame } from "./PokerDO";
 import { env } from "cloudflare:workers";
+import { toolDescriptions, contentRsp } from "./prompt";
+
+
 
 const getWidgetHtml = async (widget: string) => {
   let html = await (await env.ASSETS.fetch('http://localhost')).text();
@@ -184,11 +187,7 @@ server.registerTool(
   "poker.tableConfig",
   {
     title: "新牌局设置",
-    description: `创建一局新的德州牌桌，生成 game_id 并让用户先选筹码额度，用户选好筹码额度后，会返回当前牌局的 game_id 和用户选的筹码额度。注意如果当前对话历史中已经创建过牌桌，那开始新的一手牌只需要用之前的 game_id 调用 start_hand 即可。当然如果用户要求全新的一局牌桌再使用本工具生成一个新的 game_id。`+
-    `你要模拟成一个专业的德州扑克游戏对手，你要模拟人性，甚至要学会诈唬或者露怯，也不要把自己真正的思考理由说出来，当然如果是为了说出来混淆视听，让玩家落入你的计谋，是可以说的，但是一定不能把真正意图说出来，而不是一个机器 AI。根据你（也就是 AI）的手牌和公牌，以及玩家的历史游戏偏好来进行下注或者弃牌，你的任务是要尽量赢下这局牌桌，因此永远不要在对话中把自己的手牌透露给用户`+
-    `德扑规则采用国际标准的双人德扑模式，玩家和 AI 通过随机返回的 button 确定庄家和非庄家分别扮演庄家和非庄家，来决定翻牌前和翻牌后的下注顺序，玩家和 AI 各有两张牌，然后发公共牌（flop），发公共牌（turn），发公共牌（river），最后比较牌面，确定胜者。`+
-    `并且本牌局采用标准的无限下注模式，两人单挑：A 下注，B 跟注 ⇒ A 不能再继续加注；A 过牌，B 也过牌 ⇒ 这一轮结束，A 不能“再下注；A 过牌，B 下注 ⇒ A 可以加注（check-raise）核心原则：- 行动按顺序进行，每个人在这一轮里先行动一次。- 只有当后面有人“加注（raise）”把价格抬高，并且加注达到“有效的完整加注”（见第4部分），行动才会“重新打开”，轮到你时你才会有第二次行动机会。- 如果没有人再加注，最后会走到“大家都已跟到同一金额 / 或都过牌”，该轮下注结束- 下注结束后，你就直接请求下一步发牌的工具，开始发公共牌（flop），发公共牌（turn），发公共牌（river），最后比较牌面，确定胜者，不用询问用户，这样可以加快节奏。`+
-    `因此为了获得胜利，你也可以在用户选择 跟注 后，继续下注，直到用户或者 AI 赢下这局牌桌。`,
+    description: toolDescriptions.tableConfig,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_CONFIG_WIDGET_META,
@@ -227,7 +226,7 @@ server.registerTool(
   "poker.preflop",
   {
     title: "开始新一手德扑",
-    description: `为当前牌局洗牌并发双方的底牌，会返回 AI 底牌和用户的底牌（用户底牌模型不可见），在请求时带上当前牌局的大盲（bb）和小盲（sb）的盲注，以及用户双方的剩余总筹码(chip_stack)，如果已经进行过一轮游戏，这里的筹码应该是上一轮输赢双方更新后的筹码；随机选择玩家或者 AI 作为庄家（button）。`,
+    description: toolDescriptions.preflop,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
@@ -266,14 +265,7 @@ server.registerTool(
       content: [
         {
           type: "text",
-          text: `德州扑克已完成发牌,你现在仅能看到自己的牌，你的不能将自己的牌透露给用户，当前庄家是 ${g.button === "hero" ? "用户" : "AI"}。` +
-            `请根据双人游戏规则，庄家是小盲当前已经盲注${g.sb},大盲也同时已经盲注${g.bb}。但双方都没有进行任何行动，因此 pot ${g.pot}是当前的盲注总额。` +
-            `支付完盲注后，用户当前筹码是 ${g.hero.stack}，AI 当前筹码是 ${g.ai.stack}。` +
-            `game_id 是这局牌的id，后续请求 deal 时需要传入这个id` +
-            `现在是翻牌前，因此是庄家先行动，除了已经下好的盲注，庄家可以决定 Call / Raise / Fold，如果玩家是庄家引导玩家行动，如果你是庄家直接选择好行动，通过对话告诉玩家你的行动` +
-            `通过对话，当双方的本轮下注达到相等，且双方都不再选择加注，或者按规则不能加注后，你就直接开始调用 发公牌 工具，开始翻牌后阶段` +
-            `如果有人选择 fold ，你就直接开始调用 摊牌 工具，开始摊牌`+
-            `如果有人 all in ，如果另外一个人也跟，则还是要继续发牌，直到河牌阶段，再开始调用摊牌工具来计算输赢。如果另一个人不跟，则本轮 All in 的人胜利，可以调用摊牌来看看结果`,
+          text: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
         },
       ],
       structuredContent: {
@@ -284,6 +276,7 @@ server.registerTool(
         sb: g.sb,
         pot: g.pot,
         button: g.button,
+        statusText: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
       },
       _meta: {
         ...TABLE_WIDGET_META, 
@@ -301,7 +294,7 @@ server.registerTool(
   "poker.afterflop",
   {
     title: "发公共牌",
-    description: "为当前牌局发公共牌，会返回当前牌局的 board，以及当前 pot，以及通过输入的 bet 计算的用户以及 AI 的最新 stack。在请求时带上当前牌局的 game_id，发牌的阶段，以及当前等筹后玩家的下注额度，下注额度通过和用户的对话推理得到（如果都是过牌，bet 为 0），推理好后需要你使用 poker.afterflop 工具时填写上和用户最新沟通得到的双方等筹后的 bet 。",
+    description: toolDescriptions.afterflop,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
@@ -334,13 +327,7 @@ server.registerTool(
         await saveGame(g);
         return {
           content: [{
-            type: "text", text: `翻牌已发：${board.join(" ")}` +
-              `当前双方各下注${bet}，当前底池是 ${g.pot}` +
-              `用户当前剩余筹码是 ${g.hero.stack}，AI 当前剩余筹码是 ${g.ai.stack}` +
-              `现在是翻牌后，因此是大盲（当前非庄家那个）先行动，大盲可以先决定 Call / Raise / Fold，如果玩家是大盲引导玩家行动，如果你是大盲直接选择好行动，通过对话告诉玩家你的行动` +
-              `通过对话，当双方的本轮下注达到相等，且双方都不再选择加注，或者按规则不能加注后，你就直接开始调用 发公牌 工具，开始下一轮发牌` +
-              `如果有人选择 fold ，你就直接开始调用 摊牌 工具，开始摊牌分析牌 局信息`+
-              `如果有人 All in ，如果另外一个人也跟，则还是要继续发牌，直到河牌阶段，再开始调用摊牌工具来计算输赢。如果另一个人不跟，则本轮 All in 的人胜利，可以调用摊牌来看看结果`,
+            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           }],
           structuredContent: {
             game_id: game_id,
@@ -352,6 +339,7 @@ server.registerTool(
             sb: g.sb,
             pot: g.pot,
             button: g.button,
+            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           },
           _meta: {
             ...TABLE_WIDGET_META,
@@ -375,13 +363,7 @@ server.registerTool(
         await saveGame(g);
         return {
           content: [{
-            type: "text", text: `转牌已发：${board.join(" ")}` +
-              `当前双方各下注${bet}，当前底池是 ${g.pot}` +
-              `用户当前剩余筹码是 ${g.hero.stack}，AI 当前剩余筹码是 ${g.ai.stack}` +
-              `现在是翻牌后，因此是大盲（当前非庄家那个）先行动，大盲可以先决定 Call / Raise / Fold，如果玩家是大盲引导玩家行动，如果你是大盲直接选择好行动，通过对话告诉玩家你的行动` +
-              `通过对话，当双方的本轮下注达到相等，且双方都不再选择加注，或者按规则不能加注后，你就直接开始调用 发公牌 工具，开始下一轮发牌` +
-              `如果有人选择 fold ，你就直接开始调用 摊牌 工具，开始摊牌分析牌局信息`+
-              `如果有人 All in ，如果另外一个人也跟，则还是要继续发牌，直到河牌阶段，再开始调用摊牌工具来计算输赢。如果另一个人不跟，则本轮 All in 的人胜利，可以调用摊牌来看看结果`,
+            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           }],
           structuredContent: {
             game_id: game_id,
@@ -393,6 +375,7 @@ server.registerTool(
             sb: g.sb,
             pot: g.pot,
             button: g.button,
+            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           },
           _meta: {
             ...TABLE_WIDGET_META,
@@ -416,13 +399,7 @@ server.registerTool(
         await saveGame(g);
         return {
           content: [{
-            type: "text", text: `河牌已发：${board.join(" ")}` +
-              `当前双方各下注${bet}，当前底池是 ${g.pot}` +
-              `用户当前剩余筹码是 ${g.hero.stack}，AI 当前剩余筹码是 ${g.ai.stack}` +
-              `现在是翻牌后，因此是大盲（当前非庄家那个）先行动，大盲可以先决定 Call / Raise / Fold，如果玩家是大盲引导玩家行动，如果你是大盲直接选择好行动，通过对话告诉玩家你的行动` +
-              `通过对话，当双方的本轮下注达到相等，且双方都不再选择加注，或者按规则不能加注后，你就直接开始调用 摊牌 工具，开始摊牌分析牌局信息` +
-              `如果有人选择 fold ，你就直接开始调用 摊牌 工具，开始摊牌分析牌局信息`+
-              `如果有人 All in ，如果另外一个人也跟，则还是要继续发牌，直到河牌阶段，再开始调用摊牌工具来计算输赢。如果另一个人不跟，则本轮 All in 的人胜利，可以调用摊牌来看看结果`,
+            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           }],
           structuredContent: {
             game_id: game_id,
@@ -434,6 +411,7 @@ server.registerTool(
             sb: g.sb,
             pot: g.pot,
             button: g.button,
+            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
           },
           _meta: {
             ...TABLE_WIDGET_META,
@@ -453,7 +431,7 @@ server.registerTool(
   "poker.showdown",
   {
     title: "摊牌",
-    description: "进行最后的摊牌,并分析牌局信息，计算输赢并更新筹码",
+    description: toolDescriptions.shutdown,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
@@ -479,11 +457,7 @@ server.registerTool(
       content: [
         {
           type: "text",
-          text: `已摊牌，最终公牌：${board.join(" ")}，AI：${ai_hole.join(" ")}，用户：${hero_hole.join(" ")}，当前 pot：${g.pot}，上轮下注${bet}后，用户剩余筹码：${g.hero.stack}，AI 剩余筹码：${g.ai.stack}` +
-            `请根据最终的牌面结果，宣布胜者，并根据输赢更新双方的剩余筹码公布出来，然后再分析一下整个牌局，同时根据最终更新的双方剩余筹码，判断是否需要引导用户继续开始发牌或结束牌局` +
-            `如果有一方的筹码为 0，你就直接结束牌局，宣布另一方为最终胜者，并引导用户是否要重新选择筹码池，开始全新的一轮牌局`+
-            `本工具传回的的 pot 是当前轮最终的底池金额， ai_stack、hero_stack 是摊牌前双方的剩余筹码，因此在摊牌确定输赢后，你需要手动计算并把 pot 加入到胜利的一方的筹码 stack 中`+
-            `根据输赢你计算推理更新双方的剩余筹码后，把双方最新的剩余筹码带入到下一手牌中，也就是在请求 poker.preflop 工具时，需要你把计算完成后最新（千万不要直接把返回的值填进去，因为这是还没计算输赢的）的ai_stack和hero_stack 填写到工具的入参里`
+          text: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
         },
       ],
       structuredContent: {
@@ -496,6 +470,7 @@ server.registerTool(
         bb: g.bb,
         sb: g.sb,
         button: g.button,
+        statusText: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
       },
       _meta: {
         ...TABLE_WIDGET_META,
