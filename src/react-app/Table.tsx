@@ -54,18 +54,66 @@ function Table() {
 
 	return (
 		<div className="flex min-h-svh flex-col gap-6 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
-			<div className="flex items-center justify-center -space-x-5">
-				{ai_hole.map((v, i) => <Card key={i} value={v} />)}
+			<div className="w-68 h-22 bg-green-900 rounded-full gap-5 items-center flex overflow-hidden">
+				<div className=" items-center flex justify-center h-24 ml-5">
+					<img className="w-14 h-14" src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Horns.png" alt="Smiling Face with Horns"/>
+				</div>
+				{meta?.ai_hole ? (
+					<div className="flex items-center justify-center -space-x-7 pt-7 ml-8">
+						{ai_hole.map((v, i) => (
+							<div
+								key={i}
+								className="transform origin-bottom"
+								style={{
+									transform: `rotate(${i === 0 ? -8 : 8}deg)`,
+								}}
+							>
+								<Card value={v} />
+							</div>
+						))}
+					</div> 
+				) : (<div className=" items-center flex justify-center h-24 w-[120px] gap-1">
+					<img className='w-6 h-6' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Coin.png" alt="Coin" />
+					<span
+						className=" text-white font-bold max-w-[72px] min-w-[30px] text-lg text-center break-all leading-tight "
+					>
+						{ai_stack}
+					</span>
+				</div>)}
 			</div>
 			<div className="flex items-center justify-center -space-x-3">
 				{board.map((v, i) => <Card key={i} value={v} />)}
 			</div>
-			<div className="flex items-center justify-center -space-x-5">
-				{hero_hole.map((v, i) => <Card key={i} value={v} />)}
+			<div className=" items-right flex justify-right gap-1 w-68">
+				<span
+					className="w-full text-white font-bold text-m text-center break-all leading-tight "
+				>
+					Pot {pot}
+				</span>
 			</div>
-			<span className='text-white text-lg absolute bottom-6 left-6'>pot: {pot}</span>
-			<span className='text-white text-lg absolute bottom-12 left-6'>AI stack: {ai_stack}</span>
-			<span className='text-white text-lg absolute bottom-6 right-6'>Hero stack: {hero_stack}</span>
+			<div className="w-68 h-22 bg-green-900 rounded-full gap-6 items-center flex overflow-hidden">
+				<div className=" items-center flex justify-center h-24 gap-1 ml-6">
+					<img className='w-6 h-6' src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Coin.png" alt="Coin"/>
+					<span
+						className=" text-white font-bold max-w-[72px] min-w-[30px] text-lg text-center break-all leading-tight "
+					>
+						{hero_stack}
+					</span>
+				</div>
+				<div className="flex items-center justify-center -space-x-7 pt-7">
+					{hero_hole.map((v, i) => (
+						<div
+							key={i}
+							className="transform origin-bottom"
+							style={{
+								transform: `rotate(${i === 0 ? -8 : 8}deg)`,
+							}}
+						>
+							<Card value={v} />
+						</div>
+					))}
+				</div>
+			</div>
 			<Button variant="ghost" className="absolute top-6 right-6 rounded-full text-white" size="icon" onClick={toggleDisplayMode}>
 				<PictureInPicture2 className="h-6 w-6" />
 			</Button>
