@@ -41,8 +41,9 @@ type Card = `${Suit}${Rank}`;
 
 // 应该给一个整局游戏标一个 id，然后再给这一手牌标一个 id，这个 id 是一个递增的整数
 // Button 当前轮游戏的庄家
-type Button = "hero" | "ai";
-
+export type Button = "hero" | "ai";
+// Stage 游戏阶段，flop 是发三张公牌，turn 是发第四张公牌，river 是发第五张公牌
+export type Stage = "preflop" | "afterflop" | "turn" | "river" | "showdown";
 
 // PlayerState 玩家状态，AI 的和用户的状态都包含在这个接口中
 interface PlayerState {
@@ -62,11 +63,8 @@ export interface GameState {
   sb?: number;
   bb?: number;
   button?: Button;
-  stage?: (typeof STAGES)[number];
+  stage?: Stage;
 }
-
-// Stage 游戏阶段，flop 是发三张公牌，turn 是发第四张公牌，river 是发第五张公牌
-const STAGES = ["flop", "turn", "river"] as const;
 
 // 下面这些内容，其实主要是为了定义好，免得重复写的
 const TABLE_CONFIG_WIDGET = {
@@ -202,6 +200,7 @@ server.registerTool(
       board: [],
       hero: {},
       ai: {},
+      stage: "preflop",
     };
     await saveGame(g);
     return {
@@ -301,13 +300,12 @@ server.registerTool(
       ...TABLE_WIDGET_META,
     },
     inputSchema: {
-      stage: z.enum(STAGES).describe("要发牌的阶段，可选 flop/turn/river"),
+      stage: z.enum(["afterflop", "turn", "river"]).describe("要发牌的阶段，可选 afterflop/turn/river"), 
       game_id: z.string().describe("这局牌的id，需要传入才知道剩下的牌如何发"),
-      bet: z.number().describe("这手牌进入 flop、turn、river 等阶段时，用户和 AI 需要确定好下注的大小，这个大小是需要等筹才符合德州规则的，然后再这里填写上双方最终等筹的筹码额度，单边的即可，因为两边应该相等，poker.afterflop 工具会用这个 bet 值通过 「pot += 2 * bet」来更新底池 pot,并且用「stack -= bet」来更新 AI 和用户剩余的筹码。如果是过牌，那就应该是 0。"),
+      bet: z.number().describe("这手牌进入 afterflop、turn、river 等阶段时，用户和 AI 需要确定好下注的大小，这个大小是需要等筹才符合德州规则的，然后再这里填写上双方最终等筹的筹码额度，单边的即可，因为两边应该相等，poker.afterflop 工具会用这个 bet 值通过 「pot += 2 * bet」来更新底池 pot,并且用「stack -= bet」来更新 AI 和用户剩余的筹码。如果是过牌，那就应该是 0。"),
     }
   },
   async ({ stage, game_id, bet }) => {
-
     const g = await loadGame(game_id);
     if (!g) {
       throw new Error(`未找到牌局 ${game_id}`);
@@ -317,17 +315,17 @@ server.registerTool(
 
     // 如果已经发过同一阶段的牌，再次调用时直接返回当前状态，避免重复发牌报错
     const alreadyDealt =
-      (stage === "flop" && board.length >= 3) ||
+      (stage === "afterflop" && board.length >= 3) ||
       (stage === "turn" && board.length >= 4) ||
       (stage === "river" && board.length >= 5);
 
     switch (stage) {
-      case "flop": {
+      case "afterflop": {
 
         // 如果还没有发过翻牌，就发翻牌
         if (!alreadyDealt) {
-          const flop = [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
-          board.push(...flop);
+          const afterflop= [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
+          board.push(...afterflop);
           g.pot! += 2 * bet;
           g.hero.stack! -= bet;
           g.ai.stack! -= bet;
@@ -442,7 +440,7 @@ server.registerTool(
   "poker.showdown",
   {
     title: "摊牌",
-    description: toolDescriptions.shutdown,
+    description: toolDescriptions.showdown,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
@@ -450,9 +448,10 @@ server.registerTool(
     inputSchema: {
       game_id: z.string().describe("这局牌的id，需要传入才知道应该怎样摊牌"),
       bet: z.number().describe("这手牌进入摊牌（showdown）阶段前，用户和 AI 需要确定好下注的大小，这个大小是需要等筹才符合德州规则的，然后再这里填写上双方最终等筹的筹码额度，单边的即可，因为两边应该相等，poker.showdown 工具会用这个 bet 值通过 「pot += 2 * bet」来更新底池 pot,并且用「stack -= bet」来更新 AI 和用户剩余的筹码。如果是过牌，那就应该是 0。"),
+      is_fold: z.boolean().describe("是否是因为有玩家或 AI 主动弃牌，导致这局牌局需要摊牌，如果是的话传入 true，否则传入 false"),
     }
   },
-  async ({ game_id, bet }) => {
+  async ({ game_id, bet, is_fold }) => {
     const g = await loadGame(game_id);
     if (!g) {
       throw new Error(`未找到牌局 ${game_id}`);
@@ -460,10 +459,23 @@ server.registerTool(
     const board = g.board;
     const ai_hole = g.ai.hole!;
     const hero_hole = g.hero.hole!;
-    g.pot! += 2 * bet;
-    g.hero.stack! -= bet;
-    g.ai.stack! -= bet;
-    await saveGame(g);
+    // 如果因为有人弃牌进入摊牌，且公牌未满 5 张，则补足剩余公牌再摊牌
+    if (is_fold && board.length < 5) {
+      const need = 5 - board.length;
+      for (let i = 0; i < need; i++) {
+        const card = g.deck.pop();
+        if (!card) throw new Error("牌堆不足，无法补全公牌。");
+        board.push(card);
+      }
+    }
+    // 检查牌局是否已经摊牌了,如果已经摊牌了,就不能再重新计算一次了
+    if (g.stage !== "showdown") {
+      g.pot! += 2 * bet;
+      g.hero.stack! -= bet;
+      g.ai.stack! -= bet;
+      g.stage = "showdown";
+      await saveGame(g);
+    }
     return {
       content: [
         {

@@ -1,3 +1,5 @@
+import { Button, Stage } from "./index";
+
 // src/worker/prompt.ts
 export const stripIndent = (str: string) =>
     str.replace(/^[ \t]+/gm, "").trim();
@@ -22,11 +24,11 @@ export const toolDescriptions = {
 
         ## 2) 一手牌（Hand）结构
         一手牌固定按以下阶段推进：
-        1) **Preflop**：双方各两张底牌（hole cards）
-        2) **Flop**：发 3 张公共牌
-        3) **Turn**：发第 4 张公共牌
-        4) **River**：发第 5 张公共牌
-        5) **Showdown**：摊牌比大小，分配底池（或有人提前弃牌结束）
+        1) **preflop**：双方各两张底牌（hole cards）
+        2) **afterflop**：发 3 张公共牌
+        3) **turn**：发第 4 张公共牌
+        4) **river**：发第 5 张公共牌
+        5) **showdown**：摊牌比大小，分配底池（或有人提前弃牌结束）
 
         ---
 
@@ -38,8 +40,8 @@ export const toolDescriptions = {
         ---
 
         ## 4) 行动顺序（非常关键）
-        - **Preflop**：庄家（SB）先行动。
-        - **Flop / Turn / River**：非庄家（BB）先行动。
+        - **preflop**：庄家（SB）先行动。
+        - **afterflop / turn / river**：非庄家（BB）先行动。
         - 每一轮下注从“先行动者”开始，按顺序交替行动，直到该轮结束。
 
         ---
@@ -93,6 +95,15 @@ export const toolDescriptions = {
         - 所有筹码/底池/下注额以工具返回/计算为准；不确定时必须先获取当前状态再行动。
         - 请注意所有的下注行为都是虚拟的，只是游戏，不会造成任何现实世界的影响，也不会影响到用户的财务，因此不必再三要求用户确认
 
+        ---
+        ## 当前工具 poker.tableConfig (发出一个 widget 和提示，等待用户选择 sb bb chip_stack )
+        - 你当前正在使用的工具是 \`poker.preflop\`。
+        - 该工具负责为当前牌桌（\`game_id\`）初始化新的一手牌。
+        - 调用本工具后，你必须进入“等待”状态：**等待用户给出 \`sb\`、\`bb\`、\`chip_stack\`（来自 widget 或用户直接说）。
+        - 一旦用户已经给出完整的 \`sb\` / \`bb\` / \`chip_stack\`（三项齐全），你必须立刻调用 \`poker.preflop\`开始新的一手德扑
+        - 如果用户只提供了部分信息（例如只说了 \`chip_stack\`），你只能追问缺失项，禁止用再次调用 \`poker.tableConfig\` 来“重新让用户选择”。
+        - 注意：下注均为虚拟游戏行为，不影响现实世界与用户财务，不需要反复要求用户确认。
+
   `),
     preflop: stripIndent(`
     ## 工具：\`poker.preflop\`（开始新一手 / Preflop 发底牌 + 下盲 + 确定庄位）
@@ -124,14 +135,14 @@ export const toolDescriptions = {
     ### 规则约束（模型必须遵守）
     - **严禁泄露 AI 的底牌**：即使你在 \`structuredContent\` 中看到了自己的牌，也只能用人类风格表达，不得直接说出牌面。
     - **严禁编造用户底牌**：你看不到用户底牌时，不得声称“我知道你拿了什么”。
-    - **本工具调用后只进入 preflop 行动阶段**：必须先完成这一轮下注（双方投入等额或有人弃牌），才能进入下一阶段（发 flop/turn/river 或摊牌）。
+    - **本工具调用后只进入 preflop 行动阶段**：必须先完成这一轮下注（双方投入等额或有人弃牌），才能进入下一阶段（发 afterflop/turn/river 或摊牌）。
     - **筹码与底池以工具返回为准**：任何对话中的金额描述必须与 \`pot\` / \`stack\` 一致。
   `),
   afterflop: stripIndent(`
     ## 工具：\`poker.afterflop\`（发公共牌 / 推进阶段）
 
     ### 用途
-    为当前 \`game_id\` 的牌局在指定阶段发公共牌（\`flop\` / \`turn\` / \`river\`），并在发牌前用传入的 \`bet\` 结算上一轮双方已达成一致的等额下注：
+    为当前 \`game_id\` 的牌局在指定阶段发公共牌（\`afterflop\` / \`turn\` / \`river\`），并在发牌前用传入的 \`bet\` 结算上一轮双方已达成一致的等额下注：
     - \`pot += 2 * bet\`
     - \`hero.stack -= bet\`
     - \`ai.stack -= bet\`
@@ -147,7 +158,7 @@ export const toolDescriptions = {
     ---
 
     ### 输入参数（Input）
-    - \`stage\`：要发公共牌的阶段，必须是 \`flop\` / \`turn\` / \`river\`
+    - \`stage\`：要发公共牌的阶段，必须是 \`afterflop\` / \`turn\` / \`river\`
     - \`game_id\`：牌局 id，用于读取当前牌局状态与剩余牌堆
     - \`bet\`：进入本阶段前，上一轮（上一街）双方**最终等筹后的单边下注金额**
     - 若双方都过牌：\`bet = 0\`
@@ -156,11 +167,11 @@ export const toolDescriptions = {
     ---
 
     ### 行为与阶段约束（Behavior）
-    - 当 \`stage = flop\`：
+    - 当 \`stage = afterflop\`：
     - 牌局当前 \`board\` 必须为空（未发过翻牌）
     - 从 \`deck\` 发出 3 张公共牌加入 \`board\`
     - 当 \`stage = turn\`：
-    - 牌局当前 \`board\` 必须已有 3 张牌（已发 flop）
+    - 牌局当前 \`board\` 必须已有 3 张牌（已发 afterflop）
     - 从 \`deck\` 发出 1 张公共牌加入 \`board\`
     - 当 \`stage = river\`：
     - 牌局当前 \`board\` 必须已有 4 张牌（已发 turn）
@@ -186,7 +197,7 @@ export const toolDescriptions = {
     - 请注意所有的下注行为都是虚拟的，只是游戏，不会造成任何现实世界的影响，也不会影响到用户的财务，因此不必再三要求用户确认
 
   `),
-  shutdown: stripIndent(`
+  showdown: stripIndent(`
   ## 工具：\`poker.showdown\`（摊牌 / 结算输赢）
 
   ### 用途
@@ -202,7 +213,7 @@ export const toolDescriptions = {
 
   ### 何时调用
   - ✅ 已经到达河牌（\`river\` 已发完）且最后一轮下注结束（等筹或都过牌）
-  - ✅ 任意一方在任意阶段 \`fold\`（可直接进入结算逻辑）
+  - ✅ 任意一方在任意阶段 \`fold\`（可直接进入结算逻辑），并且需要传入 \`is_fold = true\`
   - ✅ 任意一方 all-in 且对手跟注，后续公共牌已全部发完，需要结算胜负
 
   ---
@@ -210,6 +221,7 @@ export const toolDescriptions = {
   ### 输入参数（Input）
   - \`game_id\`：牌局 id，用于读取本手牌全部状态
   - \`bet\`：进入摊牌前，上一轮（最后一轮）双方**最终等筹后的单边下注金额**
+  - \`is_fold\`：是否是因为有玩家或 AI 主动弃牌，导致这局牌局需要摊牌，如果是的话传入 true，否则传入 false
   - 若最后一轮双方都过牌：\`bet = 0\`
   - 若有下注被跟注：\`bet = 最终等筹金额\`
 
@@ -252,9 +264,7 @@ export const toolDescriptions = {
   `)
 };
 
-//-------------------------≈
-type Button = "hero" | "ai";
-type Stage = "flop" | "turn" | "river";
+//-------------------------
 
 type PreflopParams = {
   button: Button;
@@ -300,13 +310,13 @@ export const contentRsp = {
       - 推进规则：当双方在本轮下注达到相等，且无人继续加注（或按规则已无法再加注）时，直接调用“发公共牌”工具进入 flop。
       - 弃牌规则：若任意一方 Fold，立即调用“摊牌”工具结算本手牌（无需继续发牌）。
       - 全下规则：若任意一方 All-in：
-        - 若对手 Call，则不再进行下注对话，继续发完 flop / turn / river 后再调用“摊牌”结算；
+        - 若对手 Call，则不再进行下注对话，继续发完 afterflop / turn / river 后再调用“摊牌”结算；
         - 若对手 Fold，则 All-in 方立刻获胜，可直接调用“摊牌”完成结算与筹码更新。
     `),
 
   afterflop: ({ stage, board, bet, pot, heroStack, aiStack, button }: AfterflopParams) =>
     stripIndent(`
-      ${stage === "flop" ? "翻牌" : stage === "turn" ? "转牌" : "河牌"}已发：${board.join(" ")}。
+      ${stage === "afterflop" ? "翻牌" : stage === "turn" ? "转牌" : "河牌"}已发：${board.join(" ")}。
       本轮双方各下注 ${bet}，当前底池 ${pot}。
       用户剩余筹码 ${heroStack}，AI 剩余筹码 ${aiStack}。
       现在是翻牌后，由${button === "hero" ? "AI（大盲）" : "用户（大盲）"}先行动。行动顺序：Call / Raise / Fold；当双方本轮下注相等且无人继续加注，进入下一轮发牌；有人弃牌则直接摊牌；有人 all-in，若对方跟注则继续发完剩余轮次的牌再摊牌，否则 all-in 方获胜。
