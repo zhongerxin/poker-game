@@ -12,7 +12,7 @@ interface Window {
 const injected = (globalThis as Window).__WIDGET_DEFAULT__;
 const params = new URLSearchParams(location.search);
 const view = (injected ?? params.get('widget') ?? 'start').toLowerCase();
-const Widget = view === 'table' ? Start : Table;
+const Widget = view === 'table' ? Table : Start ;
 
 
 createRoot(document.getElementById("root")!).render(
