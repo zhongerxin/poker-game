@@ -556,11 +556,25 @@ server.registerTool(
 
 const mcpHandler = createMcpHandler(server);
 
+// 域名验证路径和 token，用于 OpenAI 应用验证
+const DOMAIN_VERIFICATION_PATH = "/.well-known/openai-apps-challenge";
+const DOMAIN_VERIFICATION_TOKEN = "fMiymFCX0PQ2vzp3a4NjKR-gSRU9i8eh1ay65B3FkcM";
+
 export default {
   async fetch(req: Request, env: DurableEnv, ctx: ExecutionContext) {
     // 将当前请求的 POKER_DO 绑定保存下来，供 getPokerStub 等函数使用
     pokerNamespace = env.POKER_DO;
     const url = new URL(req.url);
+    
+    if (url.pathname === DOMAIN_VERIFICATION_PATH) {
+      return new Response(DOMAIN_VERIFICATION_TOKEN, {
+        headers: {
+          "content-type": "text/plain; charset=utf-8",
+          "cache-control": "public, max-age=300",
+        },
+      });
+    }
+
     if (url.pathname.startsWith("/mcp")) return mcpHandler(req, env, ctx);
 
     return (
