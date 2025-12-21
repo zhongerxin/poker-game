@@ -25,5 +25,11 @@
 		"tag": "v1",                 
 		"new_sqlite_classes": ["PokerDO"]
 		}
+	],
+	"routes": [
+		{
+			"pattern": "poker-api.jiqiren.ai",
+			"custom_domain": true
+		}
 	]
 }
