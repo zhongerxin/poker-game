@@ -54,16 +54,16 @@ function Table() {
 	const toggleDisplayMode = useCallback(async () => {
 		const api = window.openai;
 		if (!api?.requestDisplayMode || !displayMode) {
-			console.warn('当前环境不支持切换 fullscreen/inline');
+			console.warn('Fullscreen/inline toggle is not supported in this environment');
 			return;
 		}
 		const next = displayMode === 'inline' ? 'fullscreen' : 'inline';
 		try {
 			const { mode } = await api.requestDisplayMode({ mode: next });
 			// 不需要手动 setState，宿主更新后会派发 set_globals，useDisplayMode 会自动刷新
-			console.log('切换结果：', mode);
+			console.log('Toggle result:', mode);
 		} catch (err) {
-			console.error('切换 widget 形态失败：', err);
+			console.error('Failed to toggle widget mode:', err);
 		}
 	}, [displayMode]);
 
