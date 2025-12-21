@@ -1,4 +1,10 @@
 import Card from './Card';
+import memojiCoin from '../assets/memoji-coin.png';
+import memojiWoozy from '../assets/memoji-woozy-face.png';
+import memojiEnraged from '../assets/memoji-enraged-face.png';
+import memojiHorns from '../assets/memoji-smiling-face-with-horns.png';
+import memojiKiss from '../assets/memoji-face-blowing-a-kiss.png';
+import memojiClown from '../assets/memoji-clown-face.png';
 
 type HeroHandProps = {
     heroStack: number | string;
@@ -22,7 +28,7 @@ export function HeroHand({ heroStack, heroHole }: HeroHandProps) {
             <div className="items-center flex justify-center h-24 w-full gap-1">
                 <img
                     className="w-6 h-6"
-                    src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Coin.png"
+                    src={memojiCoin}
                     alt="Coin"
                 />
                 <span className="text-white font-bold max-w-[72px] min-w-[30px] text-lg text-center break-all leading-tight">
@@ -41,11 +47,11 @@ type AiHandProps = {
 };
 
 const faces = [
-    "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Woozy%20Face.png",      // 0：极低筹码，沮丧
-    "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Enraged%20Face.png",// 1：低
-    "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Smiling%20Face%20with%20Horns.png",  // 2：中性
-    "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Face%20Blowing%20a%20Kiss.png",  // 3：高
-    "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Clown%20Face.png",     // 4：超爽
+    memojiWoozy,   // 0：极低筹码
+    memojiEnraged, // 1：低
+    memojiHorns,   // 2：中性
+    memojiKiss,    // 3：高
+    memojiClown,   // 4：超爽
 ];
 
 export function AiHand({ aiStack, aiHole, showHole, moodTier }: AiHandProps) {
@@ -72,7 +78,7 @@ export function AiHand({ aiStack, aiHole, showHole, moodTier }: AiHandProps) {
                 <div className="items-center flex justify-center h-24 w-[120px] gap-1">
                     <img
                         className="w-6 h-6"
-                        src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Coin.png"
+                        src={memojiCoin}
                         alt="Coin"
                     />
                     <span className="text-white font-bold max-w-[72px] min-w-[30px] text-lg text-center break-all leading-tight">

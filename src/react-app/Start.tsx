@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button';
 import { useDisplayMode } from './hooks/useOpenAi';
 import { Maximize2, ArrowRight } from 'lucide-react';
 import { SuitFan } from './components/SuitFan';
+import memojiYen from './assets/memoji-yen-banknote.png';
+import memojiDollar from './assets/memoji-dollar-banknote.png';
+import memojiEuro from './assets/memoji-euro-banknote.png';
 
 
 const options = [
-	{ id: '200', chip: '200', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 200 }, img_src:'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Yen%20Banknote.png' },
-	{ id: '500', chip: '500', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 500 }, img_src:'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Dollar%20Banknote.png' },	
-	{ id: '1000', chip: '1000', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 1000 }, img_src:'https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Euro%20Banknote.png' },
+	{ id: '200', chip: '200', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 200 }, img_src: memojiYen },
+	{ id: '500', chip: '500', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 500 }, img_src: memojiDollar },		
+	{ id: '1000', chip: '1000', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 1000 }, img_src: memojiEuro },
 ];
 
 

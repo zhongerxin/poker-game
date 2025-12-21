@@ -97,6 +97,7 @@ const WIDGET_CSP = {
   resource_domains: [
     "https://poker-api.jiqiren.ai",
     "https://*.oaistatic.com",
+    "https://*.githubusercontent.com",
   ],
   redirect_domains: [],
   frame_domains: [],
