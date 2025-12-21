@@ -70,10 +70,10 @@ export interface GameState {
 const TABLE_CONFIG_WIDGET = {
   id: "tableConfig.widget",
   uri: "ui://widget/tableConfig.html",
-  title: "新牌局设置",
-  description: "开始一场新的德州扑克牌局时，需要先设置筹码池和大小盲",
-  invoking: "准备中...",
-  invoked: "请开始选择",
+  title: "Poker Table",
+  description: "The poker table representing the ongoing game; also used during showdown",
+  invoking: "Preparing...",
+  invoked: "Dealing completed",
 } as const;
 
 const TABLE_WIDGET = {
