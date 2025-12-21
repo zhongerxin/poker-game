@@ -86,6 +86,21 @@ const TABLE_WIDGET = {
 } as const;
 
 
+// CSP 域名相关
+const WIDGET_DOMAIN = "https://poker-api.jiqiren.ai" as const;
+
+const WIDGET_CSP = {
+  connect_domains: [
+    "https://poker-api.jiqiren.ai",
+    "https://chatgpt.com",
+  ],
+  resource_domains: [
+    "https://poker-api.jiqiren.ai",
+    "https://*.oaistatic.com",
+  ],
+  redirect_domains: [],
+  frame_domains: [],
+} as const;
 
 const TABLE_CONFIG_WIDGET_META = {
   "openai/outputTemplate": TABLE_CONFIG_WIDGET.uri,
@@ -93,6 +108,8 @@ const TABLE_CONFIG_WIDGET_META = {
   "openai/toolInvocation/invoked": TABLE_CONFIG_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": true,
+  "openai/widgetDomain": WIDGET_DOMAIN,
+  "openai/widgetCSP": WIDGET_CSP,
 } as const;
 
 const TABLE_WIDGET_META = {
@@ -101,6 +118,8 @@ const TABLE_WIDGET_META = {
   "openai/toolInvocation/invoked": TABLE_WIDGET.invoked,
   "openai/widgetAccessible": true,
   "openai/resultCanProduceWidget": true,
+  "openai/widgetDomain": WIDGET_DOMAIN,
+  "openai/widgetCSP": WIDGET_CSP,
 } as const;
 
 // ------------------ 注册资源 ------------------
@@ -121,6 +140,8 @@ server.registerResource(
           text: await getWidgetHtml("start"),
           _meta: {
             "openai/widgetPrefersBorder": true,
+            "openai/widgetDomain": WIDGET_DOMAIN,
+            "openai/widgetCSP": WIDGET_CSP,
           }
         }
       ]
@@ -144,6 +165,8 @@ server.registerResource(
           text: await getWidgetHtml("table"),
           _meta: {
             "openai/widgetPrefersBorder": true,
+            "openai/widgetDomain": WIDGET_DOMAIN,
+            "openai/widgetCSP": WIDGET_CSP,
           }
         }
       ]
