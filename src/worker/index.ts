@@ -212,7 +212,7 @@ server.registerTool(
     title: "New Game Setup",
     description: toolDescriptions.tableConfig,
     annotations: {
-      readOnlyHint: true,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具不会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -257,7 +257,7 @@ server.registerTool(
     title: "Start a New Texas Hold'em Hand",
     description: toolDescriptions.preflop,
     annotations: { 
-      readOnlyHint: true,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具不会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -330,7 +330,7 @@ server.registerTool(
     title: "Deal Community Cards",
     description: toolDescriptions.afterflop,
     annotations: { 
-      readOnlyHint: true,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具不会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -481,7 +481,7 @@ server.registerTool(
     title: "Showdown",
     description: toolDescriptions.showdown,
     annotations: { 
-      readOnlyHint: true,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具不会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
