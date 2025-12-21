@@ -212,7 +212,7 @@ server.registerTool(
     title: "New Game Setup",
     description: toolDescriptions.tableConfig,
     annotations: {
-      readOnlyHint: false,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -257,7 +257,7 @@ server.registerTool(
     title: "Start a New Texas Hold'em Hand",
     description: toolDescriptions.preflop,
     annotations: { 
-      readOnlyHint: false,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -330,7 +330,7 @@ server.registerTool(
     title: "Deal Community Cards",
     description: toolDescriptions.afterflop,
     annotations: { 
-      readOnlyHint: false,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -481,7 +481,7 @@ server.registerTool(
     title: "Showdown",
     description: toolDescriptions.showdown,
     annotations: { 
-      readOnlyHint: false,      // 该工具会改写牌局状态
+      readOnlyHint: true,      // 该工具会改写牌局状态
       destructiveHint: false,   // 不会做破坏性操作
       idempotentHint: false,    // 同参重复调用会继续推进状态
       openWorldHint: false      // 不涉及外部系统
@@ -565,7 +565,7 @@ export default {
     // 将当前请求的 POKER_DO 绑定保存下来，供 getPokerStub 等函数使用
     pokerNamespace = env.POKER_DO;
     const url = new URL(req.url);
-    
+
     if (url.pathname === DOMAIN_VERIFICATION_PATH) {
       return new Response(DOMAIN_VERIFICATION_TOKEN, {
         headers: {
