@@ -70,19 +70,19 @@ export interface GameState {
 const TABLE_CONFIG_WIDGET = {
   id: "tableConfig.widget",
   uri: "ui://widget/tableConfig.html",
-  title: "Poker Table",
-  description: "The poker table representing the ongoing game; also used during showdown",
+  title: "New Game Setup",
+  description: "Before starting a Texas Hold'em hand, set the stack and blinds first",
   invoking: "Preparing...",
-  invoked: "Dealing completed",
+  invoked: "Please make a selection",
 } as const;
 
 const TABLE_WIDGET = {
   id: "table.widget",
   uri: "ui://widget/table.html",
-  title: "扑克游戏的牌桌",
-  description: "扑克游戏的牌桌，代表正在进行的游戏，摊牌过程也会用到",
-  invoking: "准备中...",
-  invoked: "完成发牌",
+  title: "Poker Table",
+  description: "The poker table representing the ongoing game; also used during showdown",
+  invoking: "Preparing...",
+  invoked: "Dealing completed",
 } as const;
 
 
@@ -209,7 +209,7 @@ function randomButton(): Button {
 server.registerTool(
   "poker.tableConfig",
   {
-    title: "新牌局设置",
+    title: "New Game Setup",
     description: toolDescriptions.tableConfig,
     annotations: { readOnlyHint: true },
     _meta: {
@@ -231,12 +231,12 @@ server.registerTool(
       content: [
         {
           type: "text",
-          text: "新一局新的德州牌桌已开始，等待用户选择大盲（bb）和小盲（sb）的盲注额度，以及双方的总筹码额度(chip_stack)。",
+          text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
         },
       ],
       structuredContent: {
         game_id: g.id,
-        text: "新一局新的德州牌桌已开始，等待用户选择大盲（bb）和小盲（sb）的盲注额度，以及双方的总筹码额度(chip_stack)。",
+        text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
       },
       _meta: {
         ...TABLE_CONFIG_WIDGET_META,
@@ -249,18 +249,18 @@ server.registerTool(
 server.registerTool(
   "poker.preflop",
   {
-    title: "开始新一手德扑",
+    title: "Start a New Texas Hold'em Hand",
     description: toolDescriptions.preflop,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
     },
     inputSchema: {
-      game_id: z.string().describe("这局牌的id，需要传入才知道剩下的牌如何发"),
-      bb: z.number().describe("大盲（bb）的盲注额度"),
-      sb: z.number().describe("小盲（sb）的盲注额度"),
-      hero_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值用户的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后用户新的的筹码额度来赋值，此时的筹码 ai_stack 和 hero_stack 应该是不同的，因为上一场的输赢不同"),
-      ai_stack: z.number().describe("如果是第一手牌，需要根据「新牌局设置」后，选择的总筹码额度(chip_stack)来赋值AI的筹码额度；如果不是第一手牌，需要根据上一轮游戏结束后，经过输赢计算后AI新的的筹码额度来赋值，此时的筹码 ai_stack 和 hero_stack 应该是不同的，因为上一场的输赢不同"),
+      game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
+      bb: z.number().describe("Big blind (bb) amount"),
+      sb: z.number().describe("Small blind (sb) amount"),
+      hero_stack: z.number().describe("For the first hand, set the user's stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the user's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
+      ai_stack: z.number().describe("For the first hand, set the AI stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the AI's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
     }
   },
   async ({ game_id, bb, sb, hero_stack, ai_stack }) => {
@@ -317,22 +317,22 @@ server.registerTool(
 server.registerTool(
   "poker.afterflop",
   {
-    title: "发公共牌",
+    title: "Deal Community Cards",
     description: toolDescriptions.afterflop,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
     },
     inputSchema: {
-      stage: z.enum(["afterflop", "turn", "river"]).describe("要发牌的阶段，可选 afterflop/turn/river"), 
-      game_id: z.string().describe("这局牌的id，需要传入才知道剩下的牌如何发"),
-      bet: z.number().describe("这手牌进入 afterflop、turn、river 等阶段时，用户和 AI 需要确定好下注的大小，这个大小是需要等筹才符合德州规则的，然后再这里填写上双方最终等筹的筹码额度，单边的即可，因为两边应该相等，poker.afterflop 工具会用这个 bet 值通过 「pot += 2 * bet」来更新底池 pot,并且用「stack -= bet」来更新 AI 和用户剩余的筹码。如果是过牌，那就应该是 0。"),
+      stage: z.enum(["afterflop", "turn", "river"]).describe("Stage to deal cards; choose afterflop/turn/river"), 
+      game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
+      bet: z.number().describe("When the hand reaches afterflop/turn/river, the user and AI must agree on a matched bet size. Enter the final matched amount per side (one-sided value since both equal). The poker.afterflop tool uses this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for both AI and user. Use 0 for a check."),
     }
   },
   async ({ stage, game_id, bet }) => {
     const g = await loadGame(game_id);
     if (!g) {
-      throw new Error(`未找到牌局 ${game_id}`);
+      throw new Error(`Game ${game_id} not found`);
     }
     const board = g.board;
     const hero_hole = g.hero.hole!;
@@ -463,22 +463,22 @@ server.registerTool(
 server.registerTool(
   "poker.showdown",
   {
-    title: "摊牌",
+    title: "Showdown",
     description: toolDescriptions.showdown,
     annotations: { readOnlyHint: true },
     _meta: {
       ...TABLE_WIDGET_META,
     },
     inputSchema: {
-      game_id: z.string().describe("这局牌的id，需要传入才知道应该怎样摊牌"),
-      bet: z.number().describe("这手牌进入摊牌（showdown）阶段前，用户和 AI 需要确定好下注的大小，这个大小是需要等筹才符合德州规则的，然后再这里填写上双方最终等筹的筹码额度，单边的即可，因为两边应该相等，poker.showdown 工具会用这个 bet 值通过 「pot += 2 * bet」来更新底池 pot,并且用「stack -= bet」来更新 AI 和用户剩余的筹码。如果是过牌，那就应该是 0。"),
-      is_fold: z.boolean().describe("是否是因为有玩家或 AI 主动弃牌，导致这局牌局需要摊牌，如果是的话传入 true，否则传入 false"),
+      game_id: z.string().describe("ID of this hand; required so the system knows how to resolve the showdown"),
+      bet: z.number().describe("Before entering showdown, the user and AI must agree on a matched bet size; enter the final matched amount per side (one-sided value since both equal). The poker.showdown tool applies this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for AI and user. Use 0 for a check."),
+      is_fold: z.boolean().describe("Whether the hand reaches showdown because a player or the AI folded; pass true if so, otherwise false"),
     }
   },
   async ({ game_id, bet, is_fold }) => {
     const g = await loadGame(game_id);
     if (!g) {
-      throw new Error(`未找到牌局 ${game_id}`);
+      throw new Error(`Game ${game_id} not found`);
     }
     const board = g.board;
     const ai_hole = g.ai.hole!;
@@ -488,7 +488,7 @@ server.registerTool(
       const need = 5 - board.length;
       for (let i = 0; i < need; i++) {
         const card = g.deck.pop();
-        if (!card) throw new Error("牌堆不足，无法补全公牌。");
+        if (!card) throw new Error("Deck exhausted; unable to complete community cards.");
         board.push(card);
       }
     }

@@ -4,7 +4,7 @@ import { pokerNamespace } from "./index";
 //storage
 // 为单局牌生成对应 DO 实例的 stub，不做本地缓存，依赖 idFromName 保证同名命中同一实例
 function getPokerStub(gameId: string) {
-  if (!pokerNamespace) throw new Error("POKER Durable Object 未初始化");
+  if (!pokerNamespace) throw new Error("POKER Durable Object is not initialized");
   const pokerStub = pokerNamespace.get(pokerNamespace.idFromName(gameId));
   return pokerStub;
 }
@@ -13,7 +13,7 @@ export async function loadGame(gameId: string): Promise<GameState | null> {
   // 通过 DO 实例读取持久化的牌局状态，404 表示不存在
   const res = await getPokerStub(gameId).fetch(`https://poker/game?id=${gameId}`);
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`加载牌局失败: ${res.statusText}`);
+  if (!res.ok) throw new Error(`Failed to load game: ${res.statusText}`);
 
   const game = (await res.json()) as GameState;
   return game;
@@ -25,7 +25,7 @@ export async function saveGame(game: GameState) {
     method: "POST",
     body: JSON.stringify(game),
   });
-  if (!res.ok) throw new Error(`保存牌局失败: ${res.statusText}`);
+  if (!res.ok) throw new Error(`Failed to save game: ${res.statusText}`);
 }
 
 export async function deleteGame(gameId: string) {
