@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useLayoutEffect, useRef } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
 import { Maximize2 } from "lucide-react"
@@ -12,7 +12,6 @@ import { HeroHand, AiHand }  from './components/Hand';
 function Table() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
-	const rootRef = useRef<HTMLDivElement>(null);
 
 	const board = useMemo(() => {
 		const raw = Array.isArray(meta?.board) ? meta.board.slice(0, 5) : [];
@@ -68,34 +67,8 @@ function Table() {
 		}
 	}, [displayMode]);
 
-	// 关键：切回 inline 时重新上报高度
-	useLayoutEffect(() => {
-		if (displayMode !== 'inline' || !window.openai?.notifyIntrinsicHeight) return;
-
-		const report = () => {
-			const h = rootRef.current?.scrollHeight ?? document.documentElement.scrollHeight;
-			window.openai!.notifyIntrinsicHeight(h);
-		};
-
-		// 下一帧再量，避免读到旧布局
-		requestAnimationFrame(report);
-
-		const ro = new ResizeObserver(report);
-		if (rootRef.current) ro.observe(rootRef.current);
-
-		// 兜底：窗口尺寸变化时也报一次
-		window.addEventListener('resize', report);
-
-		return () => {
-			ro.disconnect();
-			window.removeEventListener('resize', report);
-		};
-	}, [displayMode /*, 可加影响高度的数据依赖，如 tableStateVersion */]);
-
 	return (
-		<div ref={rootRef} className={`${displayMode === 'fullscreen'
-			? 'min-h-svh'
-			: 'h-auto'} flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4`} >
+		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
 			<div className="py-8 gap-6 items-center justify-center flex-col flex">
 				<AiHand aiStack={ai_stack} aiHole={ai_hole} showHole={Boolean(meta?.ai_hole)} moodTier={moodTier} />
 				<div className="flex items-center justify-center -space-x-3">

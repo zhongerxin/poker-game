@@ -35,5 +35,4 @@ export type API<WidgetState extends UnknownObject = UnknownObject> = {
     openExternal: (payload: { href: string }) => void;
     requestDisplayMode: (args: { mode: DisplayMode }) => Promise<{ mode: DisplayMode }>;
     setWidgetState: (state: WidgetState) => Promise<void>;
-    notifyIntrinsicHeight: (height: number) => void;
 };

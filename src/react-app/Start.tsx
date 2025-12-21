@@ -56,35 +56,37 @@ function Start() {
 
 	return (
 		
-		<div className="relative flex min-h-svh flex-col gap-4 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-6 text-white">
-			<div className="text-center items-center flex flex-col mb-2">
-				<SuitFan />
+		<div className="relative flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-6 text-white">
+			<div className="py-8 gap-4 items-center justify-center flex-col flex">
+				<div className="text-center items-center flex flex-col mb-2">
+					<SuitFan />
+				</div>
+				<div className="grid w-72 gap-4">
+					{options.map((item) => {
+						//处理下img上下没居中问题
+						const isSpecial = item.id === '200' || item.id === '1000';
+						return (
+							<Button
+								key={item.id}
+								className={`flex items-center justify-start bg-black/20 rounded-full hover:bg-black/35 transition-colors text-white h-16`}
+								onClick={() => sendSelection(item.id)}
+								disabled={!!sendingId}
+							>	
+								<img
+									className={`w-11 h-11 ml-2 ${isSpecial ? 'mb-1.5' : ''}`}
+									src={item.img_src}
+									alt="Chip"
+								/>
+								<div className='flex flex-col items-start ml-2'>
+									<span className="text-white text-lg font-bold leading-tight" >{item.chip}</span>
+									<span className="text-white text-xs opacity-70" >{item.bb_sb}</span>
+								</div>
+								<ArrowRight className="h-6 w-6 ml-auto mr-2.5" />
+							</Button>
+					)})}
+				</div>
+				<span className="text-xs opacity-70 max-w-64 text-center leading-relaxed">Choose a chip, or just tell ChatGPT directly.</span>
 			</div>
-			<div className="grid w-full max-w-68 gap-4">
-				{options.map((item) => {
-					//处理下img上下没居中问题
-					const isSpecial = item.id === '200' || item.id === '1000';
-					return (
-						<Button
-							key={item.id}
-							className={`flex items-center justify-start bg-black/20 rounded-full hover:bg-black/35 transition-colors text-white h-16`}
-							onClick={() => sendSelection(item.id)}
-							disabled={!!sendingId}
-						>	
-							<img
-								className={`w-11 h-11 ml-2 ${isSpecial ? 'mb-1.5' : ''}`}
-								src={item.img_src}
-								alt="Chip"
-							/>
-							<div className='flex flex-col items-start ml-2'>
-								<span className="text-white text-lg font-bold leading-tight" >{item.chip}</span>
-								<span className="text-white text-xs opacity-70" >{item.bb_sb}</span>
-							</div>
-							<ArrowRight className="h-6 w-6 ml-auto mr-2.5" />
-						</Button>
-				)})}
-			</div>
-			<span className="text-xs opacity-70 max-w-68 text-center leading-relaxed">Choose a chip, or just tell ChatGPT directly.</span>
 			{displayMode !== 'fullscreen' && (
 				<Button
 					variant="ghost"
