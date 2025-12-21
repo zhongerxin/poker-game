@@ -55,6 +55,7 @@ function Start() {
 	}, [displayMode]);
 
 	return (
+		
 		<div className="relative flex min-h-svh flex-col gap-4 items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-6 text-white">
 			<div className="text-center items-center flex flex-col mb-2">
 				<SuitFan />

@@ -93,7 +93,9 @@ function Table() {
 	}, [displayMode /*, 可加影响高度的数据依赖，如 tableStateVersion */]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
+		<div ref={rootRef} className={`${displayMode === 'fullscreen'
+			? 'min-h-svh'
+			: 'h-auto'} flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4`} >
 			<div className="py-8 gap-6 items-center justify-center flex-col flex">
 				<AiHand aiStack={ai_stack} aiHole={ai_hole} showHole={Boolean(meta?.ai_hole)} moodTier={moodTier} />
 				<div className="flex items-center justify-center -space-x-3">
