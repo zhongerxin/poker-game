@@ -27,6 +27,13 @@ npm run deploy       # Wrangler 部署
 npx vitest           # 运行测试
 ```
 
+## 部署与环境
+- **生产环境 (poker-game)**：使用自定义域名 `poker-api.jiqiren.ai`。命令：`npm install && npm run build && npx wrangler deploy --config wrangler.json`（或 `npm run deploy`）。不要加 `--env develop`，以免影响测试域。
+- **测试环境 (poker-game-develop)**：默认启用 `workers_dev` 域名，不继承生产路由。命令：`npm install && npm run build && npx wrangler deploy --env develop --config wrangler.json`。
+- **避免抢占生产域名**：`routes` 配在顶层，仅生产使用；测试环境在 `env.develop` 覆盖自己的路由（或设为 `[]`）。部署测试时若 Wrangler 询问是否把 `poker-api.jiqiren.ai` 切到测试，选择 `n`。
+- **分支到环境的对应**：`public/main` → 生产部署；`develop` → 测试部署。Cloudflare Git 集成里为两个 Worker 分别绑定对应分支与命令（生产部署命令不带 `--env develop`，测试部署命令必须带）。
+- **环境提示**：前端可用环境变量 `VITE_STAGE` 控制显示 `(dev)` 标签；测试构建设置 `VITE_STAGE=develop`，生产设置 `VITE_STAGE=production`。
+
 ## 注意事项
 - 不要提交密钥；生产配置通过 Wrangler secrets 管理。
 - 修改 Widget 模板请保持文件名小写短横线。

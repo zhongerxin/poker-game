@@ -3,27 +3,31 @@
 	"name": "poker-game",
 	"main": "./src/worker/index.ts",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true,
 	"assets": {
 		"directory": "dist/client",
-  		"binding": "ASSETS"
+		"binding": "ASSETS"
 	},
 	"durable_objects": {
 		"bindings": [
-		{
-			"name": "POKER_DO",       
-			"class_name": "PokerDO"   
-		}
+			{
+				"name": "POKER_DO",
+				"class_name": "PokerDO"
+			}
 		]
 	},
 	"migrations": [
 		{
-		"tag": "v1",                 
-		"new_sqlite_classes": ["PokerDO"]
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"PokerDO"
+			]
 		}
 	],
 	"routes": [
@@ -43,7 +47,8 @@
 					}
 				]
 			},
-			"workers_dev": true
+			"workers_dev": true,
+			"routes": []
 		}
 	}
 }

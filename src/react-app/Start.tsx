@@ -8,6 +8,9 @@ import memojiYen from './assets/memoji-yen-banknote.png';
 import memojiDollar from './assets/memoji-dollar-banknote.png';
 import memojiEuro from './assets/memoji-euro-banknote.png';
 
+const isDev = import.meta.env.VITE_STAGE === 'develop';
+
+
 
 const options = [
 	{ id: '200', chip: '200', bb_sb: 'BB 10 / SB 5', payload: { bb: 10, sb: 5, stack: 200 }, img_src: memojiYen },
@@ -88,7 +91,7 @@ function Start() {
 							</Button>
 					)})}
 				</div>
-				<span className="text-xs opacity-70 max-w-64 text-center leading-relaxed">Choose a chip, or just tell ChatGPT directly.</span>
+				<span className="text-xs opacity-70 max-w-64 text-center leading-relaxed">Choose a chip, or just tell ChatGPT directly.{isDev ? ' (dev)' : ''}</span>
 			</div>
 			{displayMode !== 'fullscreen' && (
 				<Button
