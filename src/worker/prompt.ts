@@ -68,17 +68,19 @@ export const toolDescriptions = {
 
         ---
 
-        ## 7) “再加注/行动重开”规则（容易出错点）
+        ## 7) “再加注/行动重开”规则
+        - 已等筹后行动关闭：当对手 Call 到等筹（或双方 Check），且不存在新的合法加注，当前下注轮立即结束，不能再发起加注。
         - 只要出现 **Raise**，行动就会“重新打开”，对手获得新的回应机会。
-        - 但在无限注里，“能不能再次加注”取决于工具/状态机是否允许（尤其涉及 all-in 的非完整加注）。如果你没有完整判断能力，就遵循工具返回的允许动作集合（\`allowed_actions\`）。
+        - 三下注/四下注上限：无限注无固定上限，唯一限制是筹码量；但每次加注都必须满足“≥上一次加注增量”。
+  
 
         ---
 
         ## 8) All-in（全下）
         - 若某方 All-in：
         - 对手可以 **Fold**（all-in 方直接赢得当前底池）
-        - 或 **Call**（跟到 all-in）→ 后续公共牌直接发到 River → 再进入 Showdown
-        - All-in 后如果双方都已 all-in 或已无法继续行动：**不再进行下注对话，只发完牌并摊牌**。
+        - 或 **Call**（跟到 all-in）→ 后续调用 poker.afterflop 工具按照阶段顺序（afterflop、turn、river）发完公共牌后再调用 poker.showdown 工具进行结算。如果直接调用 showdown 工具，会导致公牌还未发全，而 showdown 工具默认是在所有公共牌都发完后调用的，因此会导致错误的结算结果。
+        - All-in 后如果双方都已 all-in 或已无法继续行动：**不再进行下注对话，只发完公牌后再调用摊牌**。
 
         ---
 
@@ -215,7 +217,7 @@ export const toolDescriptions = {
   ### 何时调用
   - ✅ 已经到达河牌（\`river\` 已发完）且最后一轮下注结束（等筹或都过牌）
   - ✅ 任意一方在任意阶段 \`fold\`（可直接进入结算逻辑），并且需要传入 \`is_fold = true\`
-  - ✅ 任意一方 all-in 且对手跟注，后续公共牌已全部发完，需要结算胜负
+  - ✅ !!! 任意一方 all-in 且对手跟注，且后续公共牌已全部发完，如果前面没调用过 poker.afterflop 工具，没有把所有阶段的公牌都发完，则不能直接调用本工具，因为此时公牌还不全不能判断双方的输赢，需要先调用 poker.afterflop 工具，把所有阶段的公牌都发完，才能调用本工具正确结算胜负。
 
   ---
 
@@ -313,8 +315,8 @@ export const contentRsp = {
       - 推进规则：当双方在本轮下注达到相等，且无人继续加注（或按规则已无法再加注）时，直接调用“发公共牌”工具进入 flop。
       - 弃牌规则：若任意一方 Fold，立即调用“摊牌”工具结算本手牌（无需继续发牌）。
       - 全下规则：若任意一方 All-in：
-        - 若对手 Call，则不再进行下注对话，继续发完 afterflop / turn / river 后再调用“摊牌”结算；
-        - 若对手 Fold，则 All-in 方立刻获胜，可直接调用“摊牌”完成结算与筹码更新。
+        - 若对手 Call，则不再进行下注对话，继续调用 poker.afterflop 工具按照阶段顺序（afterflop、turn、river）发完公共牌后再调用 poker.showdown 工具进行结算；
+        - 若对手 Fold，则 All-in 方立刻获胜，可直接调用 poker.showdown 工具并入参 is_fold = true 完成结算与筹码更新。
     `),
 
   afterflop: ({ stage, board, bet, pot, heroStack, aiStack, button }: AfterflopParams) =>
