@@ -92,10 +92,12 @@ const WIDGET_DOMAIN = "https://poker-api.jiqiren.ai" as const;
 const WIDGET_CSP = {
   connect_domains: [
     "https://poker-api.jiqiren.ai",
+    "https://poker-game-develop.zhongxin123456.workers.dev",
     "https://chatgpt.com",
   ],
   resource_domains: [
     "https://poker-api.jiqiren.ai",
+    "https://poker-game-develop.zhongxin123456.workers.dev",
     "https://*.oaistatic.com",
     "https://*.githubusercontent.com",
   ],
