@@ -31,5 +31,19 @@
 			"pattern": "poker-api.jiqiren.ai",
 			"custom_domain": true
 		}
-	]
+	],
+	"env": {
+		"develop": {
+			"name": "poker-game-develop",
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "POKER_DO",
+						"class_name": "PokerDO"
+					}
+				]
+			},
+			"workers_dev": true
+		}
+	}
 }
