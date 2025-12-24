@@ -42,7 +42,7 @@ export const toolDescriptions = {
         ## 4) 行动顺序（非常关键）
         - **preflop**：庄家（SB）先行动。
         - **afterflop / turn / river**：非庄家（BB）先行动。
-        - 每一轮下注从“先行动者”开始，按顺序交替行动，直到该轮结束。
+        - 每一轮下注从 “先行动者” 开始，按顺序交替行动，直到该轮结束。
 
         ---
 
