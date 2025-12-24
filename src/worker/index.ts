@@ -490,7 +490,7 @@ server.registerTool(
       ...TABLE_WIDGET_META,
     },
     inputSchema: {
-      game_id: z.string().describe("ID of this hand; required so the system knows how to resolve the showdown"),
+      game_id: z.string().describe("ID of this hand; required so the system knows how to resolve the showdown cards"),
       bet: z.number().describe("Before entering showdown, the user and AI must agree on a matched bet size; enter the final matched amount per side (one-sided value since both equal). The poker.showdown tool applies this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for AI and user. Use 0 for a check."),
       is_fold: z.boolean().describe("Whether the hand reaches showdown because a player or the AI folded; pass true if so, otherwise false"),
     }
