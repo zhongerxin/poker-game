@@ -1,40 +1,42 @@
 # Poker Game on Cloudflare Workers
 
-React + Vite + Hono + Cloudflare Workers 打造的德州扑克对战项目，前端用 React 渲染牌桌与牌面，后端 Worker 负责牌堆、摊牌逻辑以及通过 MCP 向模型暴露工具/资源。
+React + Vite + Cloudflare Workers 的德州扑克对战项目：前端用 React 渲染牌桌与牌面，后端 Worker 负责牌局状态与 MCP 工具注册（供模型调用）。
 
 ## 目录结构
 - `src/react-app/`：前端页面组件（`Table.tsx`、`Start.tsx` 等）。
 - `src/worker/`：Cloudflare Worker 逻辑，工具注册、牌局状态、MCP handler。
-  - `index.ts`：Worker 入口、工具注册。
-  - `texts.ts`：工具描述与内容模板集中管理（多行模板字符串 + `stripIndent`）。
-  - `PokerDO`：Durable Object 牌局存储。
-- `src/widget/`：Skybridge/Widget HTML 模板。
-- `test/`：Vitest 测试。
-- `dist/`：Vite 构建产物（自动生成，勿手改）。
+  - `index.ts`：Worker 入口、MCP 工具注册、资源输出。
+  - `prompt.ts`：工具描述与文案模板（`toolDescriptions` / `contentRsp`）。
+  - `PokerDO.ts`：Durable Object 持久化牌局状态。
+- `src/components/`：UI 组件（`Button` 等）。
+- `src/lib/`：通用工具函数。
+- `dist/`：Vite 构建产物（自动生成，勿手改；Worker 静态资源绑定目录是 `dist/client`）。
 
-## 关键改动（近期）
-- 工具描述与返回内容统一收敛到 `src/worker/texts.ts` 的 `toolDescriptions` / `contentTpl`，方便维护与换行。
-- `poker.afterflop` 增加重复阶段调用保护：同一阶段已发牌则直接返回当前局面，不再抛错。
-- `poker.showdown` 支持弃牌直接摊牌时自动补足剩余公牌，再结算底池。
+## 关键实现
+- MCP 工具：`poker.tableConfig` / `poker.preflop` / `poker.afterflop` / `poker.showdown`。
+- 资源渲染：Worker 通过 `ASSETS` 读取构建后的 HTML，并注入 `__WIDGET_DEFAULT__` 用于切换 `start/table` 视图。
+- 牌局状态：Durable Object 存储与读取（`PokerDO`）。
+- 前端展示：通过 `window.openai` 的 `toolResponseMetadata` 实时渲染牌桌。
 
 ## 开发与调试
 ```bash
-npm install          # 安装依赖
-npm run dev          # 前端开发服务器（Vite）
-npm run dev:wrangler # 本地运行 Worker
-npm run build        # 生成 dist/
-npm run deploy       # Wrangler 部署
-npx vitest           # 运行测试
+npm install     # 安装依赖
+npm run dev     # 前端开发服务器（Vite）
+npm run build   # 生成 dist/
+npm run preview # 本地预览构建产物
+npm run lint    # 代码检查
+npm run check   # tsc + build + wrangler dry-run
 ```
 
+> 本地调试 Worker 可手动执行：`npx wrangler dev --config wrangler.json`
+
 ## 部署与环境
-- **生产环境 (poker-game)**：使用自定义域名 `poker-api.jiqiren.ai`。命令：`npm install && npm run build && npx wrangler deploy --config wrangler.json`（或 `npm run deploy`）。不要加 `--env develop`，以免影响测试域。
-- **测试环境 (poker-game-develop)**：默认启用 `workers_dev` 域名，不继承生产路由。命令：`npm install && npm run build && npx wrangler deploy --env develop --config wrangler.json`。
-- **避免抢占生产域名**：`routes` 配在顶层，仅生产使用；测试环境在 `env.develop` 覆盖自己的路由（或设为 `[]`）。部署测试时若 Wrangler 询问是否把 `poker-api.jiqiren.ai` 切到测试，选择 `n`。
-- **分支到环境的对应**：`public/main` → 生产部署；`develop` → 测试部署。Cloudflare Git 集成里为两个 Worker 分别绑定对应分支与命令（生产部署命令不带 `--env develop`，测试部署命令必须带）。
-- **环境提示**：前端可用环境变量 `VITE_STAGE` 控制显示 `(dev)` 标签；测试构建设置 `VITE_STAGE=develop`，生产设置 `VITE_STAGE=production`。
+- **生产环境 (poker-game)**：自定义域名 `poker-api.jiqiren.ai`。命令：`npm run build && wrangler deploy`（或 `npm run deploy`）。不要加 `--env develop`，以免影响测试域。
+- **测试环境 (poker-game-develop)**：`workers_dev` 域名。命令：`npm run build && wrangler deploy --env develop --config wrangler.json`。
+- **避免抢占生产域名**：`routes` 仅配置在顶层（生产使用）；测试环境在 `env.develop` 中配置 `routes: []`。
+- **环境提示**：前端用 `VITE_STAGE` 控制 `(dev)` 标签；测试构建可设置 `VITE_STAGE=develop`，生产设置 `VITE_STAGE=production`。
 
 ## 注意事项
-- 不要提交密钥；生产配置通过 Wrangler secrets 管理。
-- 修改 Widget 模板请保持文件名小写短横线。
-- Worker 中的文本请优先在 `src/worker/texts.ts` 修改，避免散落在业务代码里。
+- 不要提交密钥；生产配置用 Wrangler secrets 管理。
+- Worker 文本/提示词请在 `src/worker/prompt.ts` 维护，避免散落在业务逻辑里。
+- 当前仓库没有单独的 `test/` 目录；如需测试，可自行补充 Vitest 用例。
