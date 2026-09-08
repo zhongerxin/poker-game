@@ -1,9 +1,7 @@
 import Card from './Card';
 import memojiCoin from '../assets/memoji-coin.png';
-import memojiWoozy from '../assets/memoji-woozy-face.png';
 import memojiEnraged from '../assets/memoji-enraged-face.png';
 import memojiHorns from '../assets/memoji-smiling-face-with-horns.png';
-import memojiKiss from '../assets/memoji-face-blowing-a-kiss.png';
 import memojiClown from '../assets/memoji-clown-face.png';
 
 type HeroHandProps = {
@@ -43,19 +41,17 @@ type AiHandProps = {
     aiStack: number | string;
     aiHole: string[];
     showHole: boolean; // 是否展示底牌
-    moodTier: number; // 0~4
+    moodTier: 0 | 1 | 2;
 };
 
 const faces = [
-    memojiWoozy,   // 0：极低筹码
-    memojiEnraged, // 1：低
-    memojiHorns,   // 2：中性
-    memojiKiss,    // 3：高
-    memojiClown,   // 4：超爽
+    memojiEnraged, // 0：筹码落后
+    memojiHorns,   // 1：中性
+    memojiClown,   // 2：筹码领先
 ];
 
 export function AiHand({ aiStack, aiHole, showHole, moodTier }: AiHandProps) {
-    const face = faces[moodTier] ?? faces[2];
+    const face = faces[moodTier] ?? faces[1];
     return (
         <div className="w-68 h-22 bg-green-900 rounded-full gap-5 items-center flex overflow-hidden">
             <div className="items-center flex justify-center h-24 ml-5">
@@ -89,4 +85,3 @@ export function AiHand({ aiStack, aiHole, showHole, moodTier }: AiHandProps) {
         </div>
     );
 }
-

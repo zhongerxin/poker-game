@@ -37,17 +37,15 @@ function Table() {
 	const ai_stack = useMemo(() => toNumber(meta?.ai_stack), [meta, toNumber]);
 	const hero_stack = useMemo(() => toNumber(meta?.hero_stack), [meta, toNumber]);
 
-	// 计算心情等级（0-4），0 表示完全输，4 表示完全赢, 中等档位是当 AI 筹码占比 ratio 满足 0.4 ≤ ratio < 0.6 时返回 2
-	const moodTier = useMemo(() => {
+	// 三档心情：筹码占比低于 40% 为愤怒，40%–60% 为中性，达到 60% 为小丑。
+	const moodTier = useMemo<0 | 1 | 2>(() => {
 		const ai = Number(ai_stack) || 0;
 		const hero = Number(hero_stack) || 0;
 		const total = ai + hero;
 		const ratio = total > 0 ? ai / total : 0.5; // 防 0，默认中性
-		if (ratio < 0.2) return 0;
-		if (ratio < 0.4) return 1;
-		if (ratio < 0.6) return 2;
-		if (ratio < 0.8) return 3;
-		return 4;
+		if (ratio < 0.4) return 0;
+		if (ratio < 0.6) return 1;
+		return 2;
 	}, [ai_stack, hero_stack]);
 
 
