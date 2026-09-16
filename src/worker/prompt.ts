@@ -335,9 +335,11 @@ export const contentRsp = {
       - 可选动作：Call / Raise / Fold。
       - 推进规则：当双方在本轮下注达到相等，且无人继续加注（或按规则已无法再加注）时，直接调用“发公共牌”工具进入 flop。
       - 弃牌规则：若任意一方 Fold，立即调用“摊牌”工具结算本手牌（无需继续发牌）。
+        调用 poker.showdown 结算弃牌时，除了 is_fold = true，还**必须**带上 folded_player：用户弃牌传 "hero"，AI 弃牌传 "ai"。
+        只传 is_fold = true 会被服务端拒绝；即使你的工具参数表里没有列出 folded_player，也请照样传入，服务端会正常接收。
       - 全下规则：若任意一方 All-in：
         - 若对手 Call，则不再进行下注对话，继续调用 poker.afterflop 工具按照阶段顺序（afterflop、turn、river）发完公共牌后再调用 poker.showdown 工具进行结算；
-        - 若对手 Fold，则 All-in 方立刻获胜，可直接调用 poker.showdown 工具并入参 is_fold = true 完成结算与筹码更新。
+        - 若对手 Fold，则 All-in 方立刻获胜，可直接调用 poker.showdown 工具并入参 is_fold = true 与 folded_player = "hero" 或 "ai" 完成结算与筹码更新。
       如果本轮轮到 AI 行动，按照德州规则，须以一个真人风格的德州扑克对手的口吻立即给出行动并写清楚金额，不用等待用户回复。
       若本轮由 AI 行动收尾（Call/Check 导致等筹），按照德州规则，请直接调用下一阶段发牌工具，不要等待用户回复。
     `),
@@ -347,7 +349,9 @@ export const contentRsp = {
       ${stage === "afterflop" ? "翻牌" : stage === "turn" ? "转牌" : "河牌"}已发：${board.join(" ")}。
       本轮双方各下注 ${bet}，当前底池 ${pot}。
       用户剩余筹码 ${heroStack}，AI 剩余筹码 ${aiStack}。
-      现在是翻牌后，由${button === "hero" ? "AI（大盲）" : "用户（大盲）"}先行动。行动顺序：Call / Raise / Fold；当双方本轮下注相等且无人继续加注，进入下一轮发牌；有人弃牌则直接摊牌；有人 all-in，若对方跟注则继续发完剩余轮次的牌再摊牌，否则 all-in 方获胜。
+      现在是翻牌后，由${button === "hero" ? "AI（大盲）" : "用户（大盲）"}先行动。行动顺序：Call / Raise / Fold；当双方本轮下注相等且无人继续加注，进入下一轮发牌；有人 all-in，若对方跟注则继续发完剩余轮次的牌再摊牌，否则 all-in 方获胜。
+      有人弃牌时直接调用“摊牌”工具结算（不要补发剩余公牌）：除了 is_fold = true，还**必须**带上 folded_player —— 用户弃牌传 "hero"，AI 弃牌传 "ai"。
+      只传 is_fold = true 会被服务端拒绝；即使你的工具参数表里没有列出 folded_player，也请照样传入，服务端会正常接收。
       如果本轮轮到 AI 行动，按照德州规则，须以一个真人风格的德州扑克对手的口吻立即给出行动并写清楚金额，不用等待用户回复。
       若本轮由 AI 行动收尾（Call/Check 导致等筹），按照德州规则，请直接调用下一阶段发牌工具，不要等待用户回复。
     `),
@@ -359,4 +363,3 @@ export const contentRsp = {
       请严格按 structuredContent.winner 宣布胜者（hero=用户，ai=AI，tie=平局），将底池计入胜者筹码并公布最新筹码；若一方筹码为 0，结束牌局并询问是否重新选择筹码池开始新牌局，否则引导进入下一手牌（调用 poker.preflop 时带上更新后的筹码）。
     `),
 };
-

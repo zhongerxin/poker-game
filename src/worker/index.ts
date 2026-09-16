@@ -538,7 +538,38 @@ function createServer(): McpServer {
       if (g.stage !== 'showdown') {
         if (!hero_hole || !ai_hole) throw new Error('Deal a hand first');
         if (bet < 0 || bet > Math.min(g.hero.stack ?? 0, g.ai.stack ?? 0)) throw new Error('Invalid bet');
-        if (is_fold && !folded_player) throw new Error('folded_player is required when is_fold is true');
+        if (is_fold && !folded_player) {
+          // 连接器缓存的工具参数表可能还没有 folded_player（实测它会放行 schema 之外的参数）。
+          // 这里不抛错，而是返回普通工具结果：抛错会被前端渲染成红色报错气泡，但这一步只是
+          // “还差一次调用”，并非失败。返回文本必须写明本手尚未结算，否则模型会误以为已结算。
+          console.warn('mcp_tool_error', {
+            tool: 'poker.showdown',
+            code: 'missing_folded_player',
+            game_id,
+            hand_id: g.handId,
+          });
+          return {
+            content: [
+              {
+                type: "text",
+                text: [
+                  "本手尚未结算，牌局状态没有发生任何变化。",
+                  "还缺少参数 folded_player。请保持 game_id 和 bet 不变，重新调用 poker.showdown，并加上：",
+                  '  folded_player="ai"    <- 弃牌的是 AI',
+                  '  folded_player="hero"  <- 弃牌的是用户',
+                  "即使工具参数表里没有列出 folded_player，也请照样传入，服务端会正常接收。",
+                  "不要改用 is_fold=false，也不要先补发转牌/河牌，那会把本手错误地记成比牌摊牌。",
+                ].join("\n"),
+              },
+            ],
+            structuredContent: {
+              game_id,
+              settled: false,
+              missing_parameter: "folded_player",
+              next_call: 'poker.showdown(game_id, bet, is_fold=true, folded_player="hero" 或 "ai")',
+            },
+          };
+        }
         if (!is_fold && board.length !== 5) throw new Error('Deal all community cards before showdown');
         g.finalStage = g.stage ?? 'preflop';
         g.endReason = is_fold ? 'fold' : 'showdown';
