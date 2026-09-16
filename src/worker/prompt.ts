@@ -246,6 +246,7 @@ export const toolDescriptions = {
   - \`game_id\`：牌局 id，用于读取本手牌全部状态
   - \`bet\`：进入摊牌前，上一轮（最后一轮）双方**最终等筹后的单边下注金额**
   - \`is_fold\`：是否是因为有玩家或 AI 主动弃牌，导致这局牌局需要摊牌，如果是的话传入 true，否则传入 false
+  - 当 is_fold=true 时必须传 folded_player（hero 或 ai）；弃牌者的对手获胜，不比较牌力，也不补发公牌。
   - 若最后一轮双方都过牌：\`bet = 0\`
   - 若有下注被跟注：\`bet = 最终等筹金额\`
 
@@ -260,7 +261,7 @@ export const toolDescriptions = {
   - \`ai_stack\` / \`hero_stack\`：双方剩余筹码
   - 先按 \`bet\` 更新底池与双方筹码（\`pot += 2*bet\`，双方 \`stack -= bet\`），并保存牌局状态
   - 返回摊牌所需信息，供你在对话中：
-  1) 比牌并宣布胜者
+  1) 按工具返回的 winner 宣布胜者：hero 为用户，ai 为 AI，tie 为平局；不得覆盖服务端判定
   2) 将 \`pot\` 加到胜者的 \`stack\` 中（或平分底池）
   3) 更新双方最新筹码，并据此决定是否开始下一手或结束整局牌桌
 
@@ -355,7 +356,7 @@ export const contentRsp = {
     stripIndent(`
       已摊牌：公牌 ${board.join(" ")}；AI 底牌 ${ai_hole.join(" ")}；用户底牌 ${hero_hole.join(" ")}。
       本轮双方各下注 ${bet} 后，当前底池 ${pot}；用户剩余筹码 ${heroStack}，AI 剩余筹码 ${aiStack}。
-      请根据牌力宣布胜者，将底池计入胜者筹码并公布最新筹码；若一方筹码为 0，结束牌局并询问是否重新选择筹码池开始新牌局，否则引导进入下一手牌（调用 poker.preflop 时带上更新后的筹码）。
+      请严格按 structuredContent.winner 宣布胜者（hero=用户，ai=AI，tie=平局），将底池计入胜者筹码并公布最新筹码；若一方筹码为 0，结束牌局并询问是否重新选择筹码池开始新牌局，否则引导进入下一手牌（调用 poker.preflop 时带上更新后的筹码）。
     `),
 };
 

@@ -1,0 +1,571 @@
+{
+  "projectId": 255963,
+  "dashboardId": 2084238,
+  "timezone": "Asia/Shanghai",
+  "excludedAcceptanceTable": "bd7194db-64bd-4501-aac1-c0226605face",
+  "reports": [
+    {
+      "id": 11778439,
+      "short_id": "zcSooVpp",
+      "name": "01｜每日活跃 DAU",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "活跃玩家",
+              "event": "poker_activity",
+              "custom_name": "活跃玩家"
+            }
+          ],
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph",
+            "showLegend": true
+          },
+          "filterTestAccounts": false,
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": 11778440,
+      "short_id": "K4mG5pP1",
+      "name": "02｜每日开局与完成局数",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "开局手数",
+              "event": "poker_hand_started",
+              "math_hogql": "uniqExact(uuid)",
+              "custom_name": "开局手数"
+            },
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "完成手数",
+              "event": "poker_hand_completed",
+              "math_hogql": "uniqExact(uuid)",
+              "custom_name": "完成手数"
+            }
+          ],
+          "version": 4,
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph",
+            "showLegend": true
+          },
+          "filterTestAccounts": false
+        }
+      }
+    },
+    {
+      "id": 11778441,
+      "short_id": "W6Pk2uaz",
+      "name": "04｜筹码档位偏好",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "选择次数",
+              "event": "poker_chips_selected",
+              "math_hogql": "uniqExact(uuid)",
+              "custom_name": "选择次数"
+            }
+          ],
+          "version": 4,
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue",
+            "showLegend": true
+          },
+          "breakdownFilter": {
+            "breakdown": "chip_stack",
+            "breakdown_type": "event"
+          },
+          "filterTestAccounts": false
+        }
+      }
+    },
+    {
+      "id": 11778442,
+      "short_id": "NOZtVrxs",
+      "name": "05｜阶段到达情况",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "阶段到达次数",
+              "event": "poker_stage_reached",
+              "math_hogql": "uniqExact(uuid)",
+              "custom_name": "阶段到达次数"
+            }
+          ],
+          "version": 4,
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue",
+            "showLegend": true
+          },
+          "breakdownFilter": {
+            "breakdown": "stage",
+            "breakdown_type": "event"
+          },
+          "filterTestAccounts": false
+        }
+      }
+    },
+    {
+      "id": 11778443,
+      "short_id": "ilj0xonX",
+      "name": "06｜胜负分布",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "完成手数",
+              "event": "poker_hand_completed",
+              "custom_name": "完成手数",
+              "math_hogql": "uniqExact(uuid)"
+            }
+          ],
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsPie",
+            "showLegend": true
+          },
+          "breakdownFilter": {
+            "breakdown": "winner",
+            "breakdown_type": "event"
+          },
+          "filterTestAccounts": false,
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": 11778444,
+      "short_id": "yMKiHXVW",
+      "name": "07｜结束阶段与方式",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "弃牌结束",
+              "event": "poker_hand_completed",
+              "properties": [
+                {
+                  "key": "end_reason",
+                  "type": "event",
+                  "value": [
+                    "fold"
+                  ],
+                  "operator": "exact"
+                }
+              ],
+              "custom_name": "弃牌结束",
+              "math_hogql": "uniqExact(uuid)"
+            },
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "正常摊牌",
+              "event": "poker_hand_completed",
+              "properties": [
+                {
+                  "key": "end_reason",
+                  "type": "event",
+                  "value": [
+                    "showdown"
+                  ],
+                  "operator": "exact"
+                }
+              ],
+              "custom_name": "正常摊牌",
+              "math_hogql": "uniqExact(uuid)"
+            }
+          ],
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue",
+            "showLegend": true
+          },
+          "breakdownFilter": {
+            "breakdown": "final_stage",
+            "breakdown_type": "event"
+          },
+          "filterTestAccounts": false,
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": 11778445,
+      "short_id": "imQdCCcp",
+      "name": "08｜疑似中断与恢复",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "疑似中断",
+              "event": "poker_hand_interrupted",
+              "custom_name": "疑似中断",
+              "math_hogql": "uniqExact(uuid)"
+            },
+            {
+              "kind": "EventsNode",
+              "math": "hogql",
+              "name": "恢复操作",
+              "event": "poker_hand_resumed",
+              "custom_name": "恢复操作",
+              "math_hogql": "uniqExact(uuid)"
+            }
+          ],
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            },
+            {
+              "key": "identity_source",
+              "type": "event",
+              "value": [
+                "openai_subject"
+              ],
+              "operator": "exact"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph",
+            "showLegend": true
+          },
+          "filterTestAccounts": false,
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": 11778446,
+      "short_id": "LNDMeXMm",
+      "name": "09｜用户标识覆盖检查",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "去重标识数",
+              "event": "poker_activity",
+              "custom_name": "去重标识数"
+            }
+          ],
+          "interval": "day",
+          "dateRange": {
+            "date_to": null,
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "event_source",
+              "type": "event",
+              "value": [
+                "poker_server"
+              ],
+              "operator": "exact"
+            },
+            {
+              "key": "table_id",
+              "type": "event",
+              "value": [
+                "bd7194db-64bd-4501-aac1-c0226605face"
+              ],
+              "operator": "is_not"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue",
+            "showLegend": true
+          },
+          "breakdownFilter": {
+            "breakdown": "identity_source",
+            "breakdown_type": "event"
+          },
+          "filterTestAccounts": false,
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": 11778485,
+      "short_id": "KTNkqt9L",
+      "name": "03｜每日每用户局数",
+      "query": {
+        "full": true,
+        "kind": "DataTableNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "SELECT toDate(toTimeZone(timestamp, 'Asia/Shanghai')) AS `日期`, distinct_id AS `匿名用户`, uniqExactIf(properties.hand_id, event = 'poker_hand_started') AS `开局手数`, uniqExactIf(properties.hand_id, event = 'poker_hand_completed') AS `完成手数`, uniqExactIf(properties.hand_id, event = 'poker_hand_completed' AND properties.winner = 'hero') AS `获胜手数` FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.event_source = 'poker_server' AND properties.identity_source = 'openai_subject' AND properties.table_id != 'bd7194db-64bd-4501-aac1-c0226605face' AND event IN ('poker_hand_started','poker_hand_completed') GROUP BY `日期`, `匿名用户` ORDER BY `日期` DESC, `开局手数` DESC LIMIT 500"
+        },
+        "showExport": true
+      },
+      "validationQuery": "01a08c3c18b4701abc1695f50de7fb3e"
+    },
+    {
+      "id": 11778486,
+      "short_id": "b1UqaXUB",
+      "name": "10｜逐手牌结果与中断明细",
+      "query": {
+        "full": true,
+        "kind": "DataTableNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "SELECT properties.hand_id AS `手牌ID`, distinct_id AS `匿名用户`, min(timestamp) AS `首次记录时间`, max(properties.chip_stack) AS `筹码档位`, groupUniqArrayIf(properties.stage, event = 'poker_stage_reached') AS `到达阶段`, maxIf(properties.winner, event = 'poker_hand_completed') AS `赢家`, maxIf(properties.end_reason, event = 'poker_hand_completed') AS `结束方式`, maxIf(properties.final_stage, event = 'poker_hand_completed') AS `结束前阶段`, uniqExactIf(uuid, event = 'poker_hand_interrupted') AS `疑似中断次数`, uniqExactIf(uuid, event = 'poker_hand_resumed') AS `恢复次数` FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.event_source = 'poker_server' AND properties.identity_source = 'openai_subject' AND properties.table_id != 'bd7194db-64bd-4501-aac1-c0226605face' AND properties.hand_id IS NOT NULL AND properties.hand_id != 'setup' GROUP BY `手牌ID`, `匿名用户` ORDER BY `首次记录时间` DESC LIMIT 500"
+        },
+        "showExport": true
+      },
+      "validationQuery": "01a08c3c1b6871aba6ce8ee056690ff8"
+    },
+    {
+      "id": 11778487,
+      "short_id": "RLJqhAEV",
+      "name": "11｜每日人均开局数",
+      "query": {
+        "full": true,
+        "kind": "DataTableNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "SELECT toDate(toTimeZone(timestamp, 'Asia/Shanghai')) AS `日期`, uniqExact(properties.hand_id) AS `开局手数`, uniqExact(distinct_id) AS `开局玩家数`, round(uniqExact(properties.hand_id) / nullIf(uniqExact(distinct_id), 0), 2) AS `人均开局数` FROM events WHERE timestamp >= now() - INTERVAL 30 DAY AND properties.event_source = 'poker_server' AND properties.identity_source = 'openai_subject' AND properties.table_id != 'bd7194db-64bd-4501-aac1-c0226605face' AND event = 'poker_hand_started' GROUP BY `日期` ORDER BY `日期` DESC LIMIT 30"
+        },
+        "showExport": true
+      },
+      "validationQuery": "01a08c3c1e4e7a1bba1fece8c02015d5"
+    }
+  ]
+}

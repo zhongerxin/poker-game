@@ -40,3 +40,9 @@ npm run check   # tsc + build + wrangler dry-run
 - 不要提交密钥；生产配置用 Wrangler secrets 管理。
 - Worker 文本/提示词请在 `src/worker/prompt.ts` 维护，避免散落在业务逻辑里。
 - 当前仓库没有单独的 `test/` 目录；如需测试，可自行补充 Vitest 用例。
+
+## 服务端分析
+
+GA4 事件、DAU 口径、疑似中断规则及部署配置见 [docs/analytics.md](docs/analytics.md)。运行 `npm test` 检查埋点和胜负判定。
+
+PostHog 同时上报、仪表盘入口和线上验收记录见 [docs/posthog.md](docs/posthog.md)，报表查询配置保存在 [docs/posthog-dashboard.json](docs/posthog-dashboard.json)。

@@ -2,8 +2,10 @@ import { createMcpHandler } from "agents/mcp";
 import { routeAgentRequest } from "agents";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { PokerDO, loadGame, saveGame } from "./PokerDO";
+import { PokerDO, loadGame, saveGame, setPokerNamespace } from "./PokerDO";
 import { env } from "cloudflare:workers";
+import { identifyPlayer, type AnalyticsIdentity } from "./analytics";
+import { determineWinner } from "./pokerOutcome";
 import { toolDescriptions, contentRsp } from "./prompt";
 
 
@@ -17,13 +19,8 @@ const getWidgetHtml = async (widget: string) => {
   return html;
 };
 
-const server = new McpServer({ name: "Poker", version: "v1.0.0" });
 // Worker 入口传入的 env，需要包含 Wrangler 绑定的 POKER_DO DO 命名空间
 type DurableEnv = Env & { POKER_DO: DurableObjectNamespace };
-
-// 模块级保存 DO 命名空间，fetch 入口会赋值，后续构造 stub 时使用
-export let pokerNamespace: DurableObjectNamespace | undefined;
-
 
 // 德州扑克相关类型定义
 // Suit 花色
@@ -55,6 +52,15 @@ interface PlayerState {
 // 当前游戏的状态，deck 是牌组，board 是公牌，hero 是用户的状态，ai 是 AI 的状态
 export interface GameState {
   id: string;
+  revision?: number;
+  analytics?: AnalyticsIdentity;
+  handId?: string;
+  handNumber?: number;
+  startingStack?: number;
+  selectedChipStack?: number;
+  winner?: 'hero' | 'ai' | 'tie';
+  endReason?: 'fold' | 'showdown';
+  finalStage?: Stage;
   deck: Card[];
   board: Card[];
   hero: PlayerState;
@@ -127,436 +133,463 @@ const TABLE_WIDGET_META = {
 
 // ------------------ 注册资源 ------------------
 
-server.registerResource(
-  TABLE_CONFIG_WIDGET.id,
-  TABLE_CONFIG_WIDGET.uri,
-  {
-    title: TABLE_CONFIG_WIDGET.title,
-    description: TABLE_CONFIG_WIDGET.description,
-  },
-  async () => {
-    return {
-      contents: [
-        {
-          uri: TABLE_CONFIG_WIDGET.uri,
-          mimeType: "text/html+skybridge",
-          text: await getWidgetHtml("start"),
-          _meta: {
-            "openai/widgetPrefersBorder": true,
-            "openai/widgetDomain": WIDGET_DOMAIN,
-            "openai/widgetCSP": WIDGET_CSP,
+// 每个请求构建独立的 McpServer：createMcpHandler 会对每个请求新建 transport 并调用
+// server.connect()，而 Protocol.connect() 会直接覆盖内部 _transport。若 server 是模块级
+// 单例，同一 isolate 内的并发请求会互相抢写 transport，导致部分请求只拿到空的 200 响应，
+// 客户端永远等不到结果。因此把注册逻辑放进工厂函数，按请求构建。
+function createServer(): McpServer {
+  const server = new McpServer({ name: "Poker", version: "v1.0.0" });
+
+  server.registerResource(
+    TABLE_CONFIG_WIDGET.id,
+    TABLE_CONFIG_WIDGET.uri,
+    {
+      title: TABLE_CONFIG_WIDGET.title,
+      description: TABLE_CONFIG_WIDGET.description,
+    },
+    async () => {
+      return {
+        contents: [
+          {
+            uri: TABLE_CONFIG_WIDGET.uri,
+            mimeType: "text/html+skybridge",
+            text: await getWidgetHtml("start"),
+            _meta: {
+              "openai/widgetPrefersBorder": true,
+              "openai/widgetDomain": WIDGET_DOMAIN,
+              "openai/widgetCSP": WIDGET_CSP,
+            }
           }
-        }
-      ]
-    };
-  }
-);
+        ]
+      };
+    }
+  );
 
-server.registerResource(
-  TABLE_WIDGET.id,
-  TABLE_WIDGET.uri,
-  {
-    title: TABLE_WIDGET.title,
-    description: TABLE_WIDGET.description,
-  },
-  async () => {
-    return {
-      contents: [
-        {
-          uri: TABLE_WIDGET.uri,
-          mimeType: "text/html+skybridge",
-          text: await getWidgetHtml("table"),
-          _meta: {
-            "openai/widgetPrefersBorder": true,
-            "openai/widgetDomain": WIDGET_DOMAIN,
-            "openai/widgetCSP": WIDGET_CSP,
+  server.registerResource(
+    TABLE_WIDGET.id,
+    TABLE_WIDGET.uri,
+    {
+      title: TABLE_WIDGET.title,
+      description: TABLE_WIDGET.description,
+    },
+    async () => {
+      return {
+        contents: [
+          {
+            uri: TABLE_WIDGET.uri,
+            mimeType: "text/html+skybridge",
+            text: await getWidgetHtml("table"),
+            _meta: {
+              "openai/widgetPrefersBorder": true,
+              "openai/widgetDomain": WIDGET_DOMAIN,
+              "openai/widgetCSP": WIDGET_CSP,
+            }
           }
-        }
-      ]
-    };
+        ]
+      };
+    }
+  );
+
+
+  //functions
+  function makeDeck(): Card[] {
+    const deck: Card[] = [];
+    for (const r of RANKS) {
+      for (const s of SUITS) {
+        deck.push(`${s}${r}`);
+      }
+    }
+    return deck;
   }
-);
 
+  function randomInt(max: number): number {
+    const buffer = new Uint32Array(1);
+    crypto.getRandomValues(buffer);
+    return buffer[0] % max;
+  }
 
-//functions
-function makeDeck(): Card[] {
-  const deck: Card[] = [];
-  for (const r of RANKS) {
-    for (const s of SUITS) {
-      deck.push(`${s}${r}`);
+  function shuffle(deck: Card[]) {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = randomInt(i + 1);
+      [deck[i], deck[j]] = [deck[j], deck[i]];
     }
   }
-  return deck;
-}
 
-function randomInt(max: number): number {
-  const buffer = new Uint32Array(1);
-  crypto.getRandomValues(buffer);
-  return buffer[0] % max;
-}
-
-function shuffle(deck: Card[]) {
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = randomInt(i + 1);
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+  function randomButton(): Button {
+    return randomInt(2) === 0 ? "hero" : "ai";
   }
-}
 
-function randomButton(): Button {
-  return randomInt(2) === 0 ? "hero" : "ai";
-}
+  // ------------------ 注册工具 ------------------
 
-// ------------------ 注册工具 ------------------
-
-server.registerTool(
-  "poker.tableConfig",
-  {
-    title: "New Game Setup",
-    description: toolDescriptions.tableConfig,
-    annotations: {
-      readOnlyHint: false,      // 该工具不会改写牌局状态
-      destructiveHint: false,   // 不会做破坏性操作
-      idempotentHint: false,    // 同参重复调用会继续推进状态
-      openWorldHint: false      // 不涉及外部系统
-    },
-    _meta: {
-      ...TABLE_CONFIG_WIDGET_META,
-    },
-  },
-  async () => {
-    const id = crypto.randomUUID();
-    const g: GameState = {
-      id,
-      deck: [],
-      board: [],
-      hero: {},
-      ai: {},
-      stage: "preflop",
-    };
-    await saveGame(g);
-    return {
-      content: [
-        {
-          type: "text",
-          text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
-        },
-      ],
-      structuredContent: {
-        game_id: g.id,
-        text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
+  server.registerTool(
+    "poker.tableConfig",
+    {
+      title: "New Game Setup",
+      description: toolDescriptions.tableConfig,
+      annotations: {
+        readOnlyHint: false,      // 该工具不会改写牌局状态
+        destructiveHint: false,   // 不会做破坏性操作
+        idempotentHint: false,    // 同参重复调用会继续推进状态
+        openWorldHint: false      // 不涉及外部系统
       },
       _meta: {
         ...TABLE_CONFIG_WIDGET_META,
       },
-    };
-  }
-)
-
-
-server.registerTool(
-  "poker.preflop",
-  {
-    title: "Start a New Texas Hold'em Hand",
-    description: toolDescriptions.preflop,
-    annotations: { 
-      readOnlyHint: false,      // 该工具不会改写牌局状态
-      destructiveHint: false,   // 不会做破坏性操作
-      idempotentHint: false,    // 同参重复调用会继续推进状态
-      openWorldHint: false      // 不涉及外部系统
     },
-    _meta: {
-      ...TABLE_WIDGET_META,
-    },
-    inputSchema: {
-      game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
-      bb: z.number().describe("Big blind (bb) amount"),
-      sb: z.number().describe("Small blind (sb) amount"),
-      hero_stack: z.number().describe("For the first hand, set the user's stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the user's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
-      ai_stack: z.number().describe("For the first hand, set the AI stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the AI's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
-    }
-  },
-  async ({ game_id, bb, sb, hero_stack, ai_stack }) => {
-    const deck = makeDeck();
-    shuffle(deck);
-    const button = randomButton()
-    // 根据谁是庄家，以及 bb,sb 数额计算下当前的 pot 和用户以及ai 的stack
-    const pot = bb + sb;
-    const new_hero_stack = button === "hero" ? hero_stack - sb : hero_stack - bb;
-    const new_ai_stack = button === "ai" ? ai_stack - sb : ai_stack - bb;
-
-    const g: GameState = {
-      id: game_id,
-      deck,
-      board: [],
-      hero: { hole: [deck.pop()!, deck.pop()!], stack: new_hero_stack },
-      ai: { hole: [deck.pop()!, deck.pop()!], stack: new_ai_stack },
-      bb,
-      sb,
-      button: button,
-      pot,
-    };
-    const hero_hole = g.hero.hole!;
-    await saveGame(g);
-    return {
-      content: [
-        {
-          type: "text",
-          text: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
-        },
-      ],
-      structuredContent: {
-        ai: g.ai,
-        hero_stack: g.hero.stack,
-        game_id: g.id,
-        bb: g.bb,
-        sb: g.sb,
-        pot: g.pot,
-        button: g.button,
-        statusText: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
-      },
-      _meta: {
-        ...TABLE_WIDGET_META, 
-        hero_hole,
-        pot,
-        hero_stack: g.hero.stack,
-        ai_stack: g.ai.stack,
-      },
-    };
-  }
-)
-
-
-server.registerTool(
-  "poker.afterflop",
-  {
-    title: "Deal Community Cards",
-    description: toolDescriptions.afterflop,
-    annotations: { 
-      readOnlyHint: false,      // 该工具不会改写牌局状态
-      destructiveHint: false,   // 不会做破坏性操作
-      idempotentHint: false,    // 同参重复调用会继续推进状态
-      openWorldHint: false      // 不涉及外部系统
-    },
-    _meta: {
-      ...TABLE_WIDGET_META,
-    },
-    inputSchema: {
-      stage: z.enum(["afterflop", "turn", "river"]).describe("Stage to deal cards; choose afterflop/turn/river"), 
-      game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
-      bet: z.number().describe("When the hand reaches afterflop/turn/river, the user and AI must agree on a matched bet size. Enter the final matched amount per side (one-sided value since both equal). The poker.afterflop tool uses this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for both AI and user. Use 0 for a check."),
-    }
-  },
-  async ({ stage, game_id, bet }) => {
-    const g = await loadGame(game_id);
-    if (!g) {
-      throw new Error(`Game ${game_id} not found`);
-    }
-    const board = g.board;
-    const hero_hole = g.hero.hole!;
-
-    // 如果已经发过同一阶段的牌，再次调用时直接返回当前状态，避免重复发牌报错
-    const alreadyDealt =
-      (stage === "afterflop" && board.length >= 3) ||
-      (stage === "turn" && board.length >= 4) ||
-      (stage === "river" && board.length >= 5);
-
-    switch (stage) {
-      case "afterflop": {
-
-        // 如果还没有发过翻牌，就发翻牌
-        if (!alreadyDealt) {
-          const afterflop= [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
-          board.push(...afterflop);
-          g.pot! += 2 * bet;
-          g.hero.stack! -= bet;
-          g.ai.stack! -= bet;
-          g.stage = stage;
-          await saveGame(g);
-        }
-        return {
-          content: [{
-            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          }],
-          structuredContent: {
-            game_id: game_id,
-            stage,
-            board,
-            ai: g.ai,
-            hero_stack: g.hero.stack,
-            bb: g.bb,
-            sb: g.sb,
-            pot: g.pot,
-            button: g.button,
-            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          },
-          _meta: {
-            ...TABLE_WIDGET_META,
-            board,
-            hero_hole,
-            pot: g.pot,
-            ai_stack: g.ai.stack,
-            hero_stack: g.hero.stack,
-          },
-        };
-      }
-      case "turn": {
-        // 如果还没有发过转牌，就发转牌
-        if (!alreadyDealt) {
-          const turn = g.deck.pop()!;
-          board.push(turn);
-          g.pot! += 2 * bet;
-          g.hero.stack! -= bet;
-          g.ai.stack! -= bet;
-          g.stage = stage;
-          await saveGame(g);
-        }
-        return {
-          content: [{
-            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          }],
-          structuredContent: {
-            game_id: game_id,
-            stage,
-            board,
-            ai: g.ai,
-            hero_stack: g.hero.stack,
-            bb: g.bb,
-            sb: g.sb,
-            pot: g.pot,
-            button: g.button,
-            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          },
-          _meta: {
-            ...TABLE_WIDGET_META,
-            board,
-            hero_hole,
-            pot: g.pot,
-            ai_stack: g.ai.stack,
-            hero_stack: g.hero.stack,
-          },
-        };
-      }
-      case "river": {
-        // 如果还没有发过河牌，就发河牌
-        if (!alreadyDealt) {
-          const river = g.deck.pop()!;
-          board.push(river);
-          g.pot! += 2 * bet;
-          g.hero.stack! -= bet;
-          g.ai.stack! -= bet;
-          g.stage = stage;
-          await saveGame(g);
-        }
-        return {
-          content: [{
-            type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          }],
-          structuredContent: {
-            game_id: game_id,
-            stage,
-            board,
-            ai: g.ai,
-            hero_stack: g.hero.stack,
-            bb: g.bb,
-            sb: g.sb,
-            pot: g.pot,
-            button: g.button,
-            statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
-          },
-          _meta: {
-            ...TABLE_WIDGET_META,
-            board,
-            hero_hole,
-            pot: g.pot,
-            ai_stack: g.ai.stack,
-            hero_stack: g.hero.stack,
-          },
-        };
-      }
-    }
-  }
-)
-
-server.registerTool(
-  "poker.showdown",
-  {
-    title: "Showdown",
-    description: toolDescriptions.showdown,
-    annotations: { 
-      readOnlyHint: false,      // 该工具不会改写牌局状态
-      destructiveHint: false,   // 不会做破坏性操作
-      idempotentHint: false,    // 同参重复调用会继续推进状态
-      openWorldHint: false      // 不涉及外部系统
-    },
-    _meta: {
-      ...TABLE_WIDGET_META,
-    },
-    inputSchema: {
-      game_id: z.string().describe("ID of this hand; required so the system knows how to resolve the showdown cards"),
-      bet: z.number().describe("Before entering showdown, the user and AI must agree on a matched bet size; enter the final matched amount per side (one-sided value since both equal). The poker.showdown tool applies this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for AI and user. Use 0 for a check."),
-      is_fold: z.boolean().describe("Whether the hand reaches showdown because a player or the AI folded; pass true if so, otherwise false"),
-    }
-  },
-  async ({ game_id, bet, is_fold }) => {
-    const g = await loadGame(game_id);
-    if (!g) {
-      throw new Error(`Game ${game_id} not found`);
-    }
-    const board = g.board;
-    const ai_hole = g.ai.hole!;
-    const hero_hole = g.hero.hole!;
-    // 如果因为有人弃牌进入摊牌，且公牌未满 5 张，则补足剩余公牌再摊牌
-    if (is_fold && board.length < 5) {
-      const need = 5 - board.length;
-      for (let i = 0; i < need; i++) {
-        const card = g.deck.pop();
-        if (!card) throw new Error("Deck exhausted; unable to complete community cards.");
-        board.push(card);
-      }
-    }
-    // 检查牌局是否已经摊牌了,如果已经摊牌了,就不能再重新计算一次了
-    if (g.stage !== "showdown") {
-      g.pot! += 2 * bet;
-      g.hero.stack! -= bet;
-      g.ai.stack! -= bet;
-      g.stage = "showdown";
+    async (extra) => {
+      const id = crypto.randomUUID();
+      const g: GameState = {
+        id,
+        analytics: await identifyPlayer(extra._meta, id),
+        deck: [],
+        board: [],
+        hero: {},
+        ai: {},
+        stage: "preflop",
+      };
       await saveGame(g);
-    }
-    return {
-      content: [
-        {
-          type: "text",
-          text: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
+      return {
+        content: [
+          {
+            type: "text",
+            text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
+          },
+        ],
+        structuredContent: {
+          game_id: g.id,
+          text: "A new Texas Hold'em table has started; waiting for the user to choose the big blind (bb), small blind (sb), and total chip stack for both sides.",
         },
-      ],
-      structuredContent: {
-        board,
-        ai_hole,
-        hero_hole,
-        pot: g.pot,
-        ai_stack: g.ai.stack,
-        hero_stack: g.hero.stack,
-        bb: g.bb,
-        sb: g.sb,
-        button: g.button,
-        statusText: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
+        _meta: {
+          ...TABLE_CONFIG_WIDGET_META,
+        },
+      };
+    }
+  )
+
+
+  server.registerTool(
+    "poker.preflop",
+    {
+      title: "Start a New Texas Hold'em Hand",
+      description: toolDescriptions.preflop,
+      annotations: { 
+        readOnlyHint: false,      // 该工具不会改写牌局状态
+        destructiveHint: false,   // 不会做破坏性操作
+        idempotentHint: false,    // 同参重复调用会继续推进状态
+        openWorldHint: false      // 不涉及外部系统
       },
       _meta: {
         ...TABLE_WIDGET_META,
-        board,
-        ai_hole,
-        hero_hole,
-        pot: g.pot,
-        ai_stack: g.ai.stack,
-        hero_stack: g.hero.stack,
       },
-    };
-  }
-)
+      inputSchema: {
+        game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
+        bb: z.number().describe("Big blind (bb) amount"),
+        sb: z.number().describe("Small blind (sb) amount"),
+        hero_stack: z.number().describe("For the first hand, set the user's stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the user's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
+        ai_stack: z.number().describe("For the first hand, set the AI stack based on the chip_stack chosen in “New Game Setup”; for later hands, set it to the AI's updated stack after applying wins/losses from the previous round—ai_stack and hero_stack will differ after each round"),
+      }
+    },
+    async ({ game_id, bb, sb, hero_stack, ai_stack }, extra) => {
+      const previous = await loadGame(game_id);
+      if (!previous) throw new Error(`Game ${game_id} not found`);
+      if (previous.hero.hole && previous.stage !== 'showdown') throw new Error('Finish the current hand before starting another');
+      if (sb <= 0 || bb < sb || hero_stack < bb || ai_stack < bb) throw new Error('Invalid blinds or starting stacks');
+      const deck = makeDeck();
+      shuffle(deck);
+      const button = randomButton()
+      // 根据谁是庄家，以及 bb,sb 数额计算下当前的 pot 和用户以及ai 的stack
+      const pot = bb + sb;
+      const new_hero_stack = button === "hero" ? hero_stack - sb : hero_stack - bb;
+      const new_ai_stack = button === "ai" ? ai_stack - sb : ai_stack - bb;
+
+      const g: GameState = {
+        id: game_id,
+        revision: previous.revision,
+        analytics: previous.analytics?.identitySource === 'openai_subject' ? previous.analytics : await identifyPlayer(extra._meta, game_id),
+        handId: crypto.randomUUID(),
+        handNumber: (previous.handNumber ?? 0) + 1,
+        startingStack: hero_stack,
+        selectedChipStack: previous.selectedChipStack ?? hero_stack,
+        stage: 'preflop',
+        deck,
+        board: [],
+        hero: { hole: [deck.pop()!, deck.pop()!], stack: new_hero_stack },
+        ai: { hole: [deck.pop()!, deck.pop()!], stack: new_ai_stack },
+        bb,
+        sb,
+        button: button,
+        pot,
+      };
+      const hero_hole = g.hero.hole!;
+      await saveGame(g);
+      return {
+        content: [
+          {
+            type: "text",
+            text: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
+          },
+        ],
+        structuredContent: {
+          ai: g.ai,
+          hero_stack: g.hero.stack,
+          game_id: g.id,
+          bb: g.bb,
+          sb: g.sb,
+          pot: g.pot,
+          button: g.button,
+          statusText: contentRsp.preflop({ button, sb, bb, pot, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, game_id: g.id }),
+        },
+        _meta: {
+          ...TABLE_WIDGET_META, 
+          hero_hole,
+          pot,
+          hero_stack: g.hero.stack,
+          ai_stack: g.ai.stack,
+        },
+      };
+    }
+  )
+
+
+  server.registerTool(
+    "poker.afterflop",
+    {
+      title: "Deal Community Cards",
+      description: toolDescriptions.afterflop,
+      annotations: { 
+        readOnlyHint: false,      // 该工具不会改写牌局状态
+        destructiveHint: false,   // 不会做破坏性操作
+        idempotentHint: false,    // 同参重复调用会继续推进状态
+        openWorldHint: false      // 不涉及外部系统
+      },
+      _meta: {
+        ...TABLE_WIDGET_META,
+      },
+      inputSchema: {
+        stage: z.enum(["afterflop", "turn", "river"]).describe("Stage to deal cards; choose afterflop/turn/river"), 
+        game_id: z.string().describe("ID of this hand; required so the system knows how to deal the remaining cards"),
+        bet: z.number().describe("When the hand reaches afterflop/turn/river, the user and AI must agree on a matched bet size. Enter the final matched amount per side (one-sided value since both equal). The poker.afterflop tool uses this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for both AI and user. Use 0 for a check."),
+      }
+    },
+    async ({ stage, game_id, bet }) => {
+      const g = await loadGame(game_id);
+      if (!g) {
+        throw new Error(`Game ${game_id} not found`);
+      }
+      if (g.stage === 'showdown') throw new Error('This hand has already ended');
+      const expectedLength = { afterflop: 0, turn: 3, river: 4 }[stage];
+      if (!g.hero.hole || g.board.length < expectedLength) throw new Error('Deal stages in order');
+      if (g.board.length === expectedLength && (bet < 0 || bet > Math.min(g.hero.stack ?? 0, g.ai.stack ?? 0))) throw new Error('Invalid bet');
+      const board = g.board;
+      const hero_hole = g.hero.hole!;
+
+      // 如果已经发过同一阶段的牌，再次调用时直接返回当前状态，避免重复发牌报错
+      const alreadyDealt =
+        (stage === "afterflop" && board.length >= 3) ||
+        (stage === "turn" && board.length >= 4) ||
+        (stage === "river" && board.length >= 5);
+
+      switch (stage) {
+        case "afterflop": {
+
+          // 如果还没有发过翻牌，就发翻牌
+          if (!alreadyDealt) {
+            const afterflop= [g.deck.pop()!, g.deck.pop()!, g.deck.pop()!];
+            board.push(...afterflop);
+            g.pot! += 2 * bet;
+            g.hero.stack! -= bet;
+            g.ai.stack! -= bet;
+            g.stage = stage;
+            await saveGame(g);
+          }
+          return {
+            content: [{
+              type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            }],
+            structuredContent: {
+              game_id: game_id,
+              stage,
+              board,
+              ai: g.ai,
+              hero_stack: g.hero.stack,
+              bb: g.bb,
+              sb: g.sb,
+              pot: g.pot,
+              button: g.button,
+              statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            },
+            _meta: {
+              ...TABLE_WIDGET_META,
+              board,
+              hero_hole,
+              pot: g.pot,
+              ai_stack: g.ai.stack,
+              hero_stack: g.hero.stack,
+            },
+          };
+        }
+        case "turn": {
+          // 如果还没有发过转牌，就发转牌
+          if (!alreadyDealt) {
+            const turn = g.deck.pop()!;
+            board.push(turn);
+            g.pot! += 2 * bet;
+            g.hero.stack! -= bet;
+            g.ai.stack! -= bet;
+            g.stage = stage;
+            await saveGame(g);
+          }
+          return {
+            content: [{
+              type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            }],
+            structuredContent: {
+              game_id: game_id,
+              stage,
+              board,
+              ai: g.ai,
+              hero_stack: g.hero.stack,
+              bb: g.bb,
+              sb: g.sb,
+              pot: g.pot,
+              button: g.button,
+              statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            },
+            _meta: {
+              ...TABLE_WIDGET_META,
+              board,
+              hero_hole,
+              pot: g.pot,
+              ai_stack: g.ai.stack,
+              hero_stack: g.hero.stack,
+            },
+          };
+        }
+        case "river": {
+          // 如果还没有发过河牌，就发河牌
+          if (!alreadyDealt) {
+            const river = g.deck.pop()!;
+            board.push(river);
+            g.pot! += 2 * bet;
+            g.hero.stack! -= bet;
+            g.ai.stack! -= bet;
+            g.stage = stage;
+            await saveGame(g);
+          }
+          return {
+            content: [{
+              type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            }],
+            structuredContent: {
+              game_id: game_id,
+              stage,
+              board,
+              ai: g.ai,
+              hero_stack: g.hero.stack,
+              bb: g.bb,
+              sb: g.sb,
+              pot: g.pot,
+              button: g.button,
+              statusText: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
+            },
+            _meta: {
+              ...TABLE_WIDGET_META,
+              board,
+              hero_hole,
+              pot: g.pot,
+              ai_stack: g.ai.stack,
+              hero_stack: g.hero.stack,
+            },
+          };
+        }
+      }
+    }
+  )
+
+  server.registerTool(
+    "poker.showdown",
+    {
+      title: "Showdown",
+      description: toolDescriptions.showdown,
+      annotations: { 
+        readOnlyHint: false,      // 该工具不会改写牌局状态
+        destructiveHint: false,   // 不会做破坏性操作
+        idempotentHint: false,    // 同参重复调用会继续推进状态
+        openWorldHint: false      // 不涉及外部系统
+      },
+      _meta: {
+        ...TABLE_WIDGET_META,
+      },
+      inputSchema: {
+        game_id: z.string().describe("ID of this hand; required so the system knows how to resolve the showdown cards"),
+        bet: z.number().describe("Before entering showdown, the user and AI must agree on a matched bet size; enter the final matched amount per side (one-sided value since both equal). The poker.showdown tool applies this bet via “pot += 2 * bet” to update the pot and “stack -= bet” to deduct remaining stacks for AI and user. Use 0 for a check."),
+        folded_player: z.enum(["hero", "ai"]).optional().describe("Required when is_fold is true: the player who folded; the other player wins regardless of cards"),
+        is_fold: z.boolean().describe("Whether the hand reaches showdown because a player or the AI folded; pass true if so, otherwise false"),
+      }
+    },
+    async ({ game_id, bet, is_fold, folded_player }) => {
+      const g = await loadGame(game_id);
+      if (!g) {
+        throw new Error(`Game ${game_id} not found`);
+      }
+      const board = g.board;
+      const ai_hole = g.ai.hole!;
+      const hero_hole = g.hero.hole!;
+      if (g.stage !== 'showdown') {
+        if (!hero_hole || !ai_hole) throw new Error('Deal a hand first');
+        if (bet < 0 || bet > Math.min(g.hero.stack ?? 0, g.ai.stack ?? 0)) throw new Error('Invalid bet');
+        if (is_fold && !folded_player) throw new Error('folded_player is required when is_fold is true');
+        if (!is_fold && board.length !== 5) throw new Error('Deal all community cards before showdown');
+        g.finalStage = g.stage ?? 'preflop';
+        g.endReason = is_fold ? 'fold' : 'showdown';
+        g.winner = is_fold ? (folded_player === 'hero' ? 'ai' : 'hero') : determineWinner(hero_hole, ai_hole, board);
+        g.pot! += 2 * bet;
+        g.hero.stack! -= bet;
+        g.ai.stack! -= bet;
+        g.stage = 'showdown';
+        await saveGame(g);
+      }
+      return {
+        content: [
+          {
+            type: "text",
+            text: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
+          },
+        ],
+        structuredContent: {
+          game_id: g.id,
+          hand_id: g.handId,
+          winner: g.winner,
+          end_reason: g.endReason,
+          board,
+          ai_hole,
+          hero_hole,
+          pot: g.pot,
+          ai_stack: g.ai.stack,
+          hero_stack: g.hero.stack,
+          bb: g.bb,
+          sb: g.sb,
+          button: g.button,
+          statusText: contentRsp.showdown({ board, ai_hole, hero_hole, bet, pot: g.pot as number, aiStack: g.ai.stack as number, heroStack: g.hero.stack as number }),
+        },
+        _meta: {
+          ...TABLE_WIDGET_META,
+          board,
+          ai_hole,
+          hero_hole,
+          pot: g.pot,
+          ai_stack: g.ai.stack,
+          hero_stack: g.hero.stack,
+        },
+      };
+    }
+  )
+
+  return server;
+}
 
 
 
-const mcpHandler = createMcpHandler(server);
 
 // 域名验证路径和 token，用于 OpenAI 应用验证
 const DOMAIN_VERIFICATION_PATH = "/.well-known/openai-apps-challenge";
@@ -565,7 +598,7 @@ const DOMAIN_VERIFICATION_TOKEN = "fMiymFCX0PQ2vzp3a4NjKR-gSRU9i8eh1ay65B3FkcM";
 export default {
   async fetch(req: Request, env: DurableEnv, ctx: ExecutionContext) {
     // 将当前请求的 POKER_DO 绑定保存下来，供 getPokerStub 等函数使用
-    pokerNamespace = env.POKER_DO;
+    setPokerNamespace(env.POKER_DO);
     const url = new URL(req.url);
 
     if (url.pathname === DOMAIN_VERIFICATION_PATH) {
@@ -577,7 +610,7 @@ export default {
       });
     }
 
-    if (url.pathname.startsWith("/mcp")) return mcpHandler(req, env, ctx);
+    if (url.pathname.startsWith("/mcp")) return createMcpHandler(createServer())(req, env, ctx);
 
     return (
       (await routeAgentRequest(req, env)) ??
