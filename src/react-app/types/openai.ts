@@ -34,5 +34,5 @@ export type API<WidgetState extends UnknownObject = UnknownObject> = {
     sendFollowUpMessage: (args: { prompt: string }) => Promise<void>;
     openExternal: (payload: { href: string }) => void;
     requestDisplayMode: (args: { mode: DisplayMode }) => Promise<{ mode: DisplayMode }>;
-    setWidgetState: (state: WidgetState) => Promise<void>;
+    setWidgetState: (state: WidgetState) => void | Promise<void>;
 };

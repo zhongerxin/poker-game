@@ -52,6 +52,7 @@
 		"check": "tsc && vite build && wrangler deploy --dry-run",
 		"deploy": "npm run build && wrangler deploy",
 		"dev": "vite",
+		"dev:widget": "vite --config test/widget.vite.config.ts --host 127.0.0.1",
 		"lint": "eslint .",
 		"preview": "npm run build && vite preview",
 		"test": "vitest run"

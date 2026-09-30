@@ -1,4 +1,5 @@
-import { useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
+import { unwrapToolMetadata } from '../lib/pokerActions';
 import { SET_GLOBALS_EVENT_TYPE, type OpenAiGlobals, type SetGlobalsEvent } from '../types/openai'; // 路径按你的声明文件调整
 
 export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(key: K): OpenAiGlobals[K] | undefined {
@@ -15,5 +16,8 @@ export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(key: K): OpenAiGl
     );
 }
 
-export const useToolResponseMetadata = () => useOpenAiGlobal('toolResponseMetadata');
+export const useToolResponseMetadata = () => {
+    const raw = useOpenAiGlobal('toolResponseMetadata');
+    return useMemo(() => unwrapToolMetadata(raw), [raw]);
+};
 export const useDisplayMode = () => useOpenAiGlobal('displayMode');

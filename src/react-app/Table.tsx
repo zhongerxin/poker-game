@@ -1,6 +1,9 @@
 import { useMemo, useCallback } from 'react';
 import { Button } from "@/components/ui/button"
 import { useToolResponseMetadata, useDisplayMode } from './hooks/useOpenAi';
+import { BettingActions } from './components/BettingActions';
+import { getBettingContext, getContextKey, getRaiseBounds } from './lib/pokerActions';
+import './betting.css';
 import { Maximize2 } from "lucide-react"
 import Card from './components/Card';
 import { HeroHand, AiHand }  from './components/Hand';
@@ -12,6 +15,7 @@ import { HeroHand, AiHand }  from './components/Hand';
 function Table() {
 	const meta = useToolResponseMetadata();
 	const displayMode = useDisplayMode(); // 实时反映宿主当前模式
+	const bettingContext = getBettingContext(meta);
 
 	const board = useMemo(() => {
 		const raw = Array.isArray(meta?.board) ? meta.board.slice(0, 5) : [];
@@ -66,8 +70,8 @@ function Table() {
 	}, [displayMode]);
 
 	return (
-		<div className="flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
-			<div className="py-8 gap-6 items-center justify-center flex-col flex">
+		<div className="relative flex min-h-svh flex-col items-center justify-center bg-green-800 border-2 border-green-900 shadow-[inset_0_0px_100px_rgba(0,0,0,0.2)] p-4">
+			<div className="py-8 gap-6 items-center justify-center flex-col flex w-full max-w-sm">
 				<AiHand aiStack={ai_stack} aiHole={ai_hole} showHole={Boolean(meta?.ai_hole)} moodTier={moodTier} />
 				<div className="flex items-center justify-center -space-x-3">
 					{board.map((v, i) => <Card key={i} value={v} />)}
@@ -80,11 +84,21 @@ function Table() {
 					</span>
 				</div>
 				<HeroHand heroStack={hero_stack} heroHole={hero_hole} />
+                {bettingContext && (
+                    <BettingActions
+                        key={getContextKey(bettingContext)}
+                        context={bettingContext}
+                        bounds={getRaiseBounds(meta)}
+                        pot={pot}
+                        canBet={hero_stack > 0 && ai_stack > 0}
+                    />
+                )}
 				{displayMode !== 'fullscreen' && (
 					<Button
 						variant="ghost"
 						className="absolute top-4 right-4 rounded-full text-white"
 						size="icon"
+						aria-label="Toggle fullscreen"
 						onClick={toggleDisplayMode}
 					>
 						<Maximize2 className="h-8 w-8" />

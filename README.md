@@ -22,6 +22,7 @@ React + Vite + Cloudflare Workers 的德州扑克对战项目：前端用 React 
 ```bash
 npm install     # 安装依赖
 npm run dev     # 前端开发服务器（Vite）
+npm run dev:widget # 不连接 Cloudflare 的 widget 本地模拟预览
 npm run build   # 生成 dist/
 npm run preview # 本地预览构建产物
 npm run lint    # 代码检查
@@ -39,7 +40,9 @@ npm run check   # tsc + build + wrangler dry-run
 ## 注意事项
 - 不要提交密钥；生产配置用 Wrangler secrets 管理。
 - Worker 文本/提示词请在 `src/worker/prompt.ts` 维护，避免散落在业务逻辑里。
-- 当前仓库没有单独的 `test/` 目录；如需测试，可自行补充 Vitest 用例。
+- 测试位于 `test/`，运行 `npm test`。
+
+快捷下注按钮、本地预览与发布方式见 [docs/widget-betting.md](docs/widget-betting.md)。
 
 ## 服务端分析
 

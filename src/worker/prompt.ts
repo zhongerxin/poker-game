@@ -322,6 +322,17 @@ type ShowdownParams = {
   heroStack: number;
 };
 
+// Live result guidance keeps button messages concise without changing published tool descriptions.
+const widgetActionInstructions = stripIndent(`
+  快捷下注按钮规则：
+  - 含 [Poker widget context: ...] 的消息是用户的一次行动；先对照最新工具结果的 game_id、hand_id、stage，且确认轮到用户。旧手牌或旧阶段的按钮不得作用到新状态。
+  - 轮内金额以最新对话为准，不能只用 widget 上一次发牌时的底池和筹码。过牌 / 跟注表示无需补筹码则 Check，否则 Call（不超过用户剩余筹码）。
+  - 半池 / 满池在无人下注时表示按当前底池下注；已有下注时，先计算用户跟注后的底池，再将该底池的一半 / 全部作为加注增量。向上取整到整数筹码，遵守最小下注 / 加注额和有效筹码上限。不允许加注时说明原因并等待新选择，不擅自改成跟注或弃牌。
+  - 全下只匹配有效筹码，未被跟注的超出部分退回。用户弃牌必须用 is_fold=true、folded_player="hero" 结算。
+  - 用户用滑杆指定「下注 / 加注到 X」时，X 是该轮累计投入（翻牌前包含已投入的盲注），不是本次追加额，也不是双方最终结算的 bet。按最新对话校验，不能擅自提高金额；若已低于当前最小合法加注，提示用户重新选择。
+  - AI 仍应独立决定跟注、加注或弃牌，不得默认替 AI 跟注。只有本轮合法结束才调用后续发牌 / 结算工具，bet 必须是双方最终等筹后的金额，不能直接把按钮的下注金额当作 bet。
+`);
+
 export const contentRsp = {
   preflop: ({ button, sb, bb, pot, heroStack, aiStack, game_id }: PreflopParams) =>
     stripIndent(`
@@ -342,6 +353,7 @@ export const contentRsp = {
         - 若对手 Fold，则 All-in 方立刻获胜，可直接调用 poker.showdown 工具并入参 is_fold = true 与 folded_player = "hero" 或 "ai" 完成结算与筹码更新。
       如果本轮轮到 AI 行动，按照德州规则，须以一个真人风格的德州扑克对手的口吻立即给出行动并写清楚金额，不用等待用户回复。
       若本轮由 AI 行动收尾（Call/Check 导致等筹），按照德州规则，请直接调用下一阶段发牌工具，不要等待用户回复。
+      ${widgetActionInstructions}
     `),
 
   afterflop: ({ stage, board, bet, pot, heroStack, aiStack, button }: AfterflopParams) =>
@@ -354,6 +366,7 @@ export const contentRsp = {
       只传 is_fold = true 会被服务端拒绝；即使你的工具参数表里没有列出 folded_player，也请照样传入，服务端会正常接收。
       如果本轮轮到 AI 行动，按照德州规则，须以一个真人风格的德州扑克对手的口吻立即给出行动并写清楚金额，不用等待用户回复。
       若本轮由 AI 行动收尾（Call/Check 导致等筹），按照德州规则，请直接调用下一阶段发牌工具，不要等待用户回复。
+      ${widgetActionInstructions}
     `),
 
   showdown: ({ board, ai_hole, hero_hole, bet, pot, aiStack, heroStack }: ShowdownParams) =>

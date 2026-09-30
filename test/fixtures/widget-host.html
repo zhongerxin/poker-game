@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>德州扑克 · 本地按钮测试</title>
+    <style>
+      body { margin: 0; background: #f4f5f4; font-family: system-ui, sans-serif; }
+      #demo-controls { padding: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      #demo-controls button, #demo-controls select { border: 1px solid #bbb; border-radius: 6px; padding: 8px; background: white; color: #17251a; }
+      #root { max-width: 440px; margin: auto; }
+      #sent-messages { padding: 16px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+      body.preview-only { background: #f4f5f4; }
+      .preview-only #demo-controls, .preview-only #sent-messages { display: none; }
+    </style>
+  </head>
+  <body>
+    <aside id="demo-controls" aria-label="本地测试控制台">
+      <strong>本地模拟宿主 · 不连接线上</strong>
+      <label>场景 <select id="scenario">
+        <option value="preflop">翻牌前</option>
+        <option value="afterflop" selected>翻牌</option>
+        <option value="turn">转牌</option>
+        <option value="river">河牌</option>
+        <option value="showdown">已结算</option>
+        <option value="all-in">筹码耗尽</option>
+        <option value="opponent-all-in">对手筹码耗尽</option>
+        <option value="short-stack">短筹码全下</option>
+        <option value="legacy">旧工具结果</option>
+        <option value="envelope">新版宿主数据格式</option>
+        <option value="unsupported">不支持发消息</option>
+        <option value="english">英文界面</option>
+      </select></label>
+      <button id="fail-next" type="button">下次发送失败</button>
+      <button id="fail-persist" type="button">下次保存失败</button>
+      <button id="new-hand" type="button">新一手</button>
+    </aside>
+    <div id="root"></div>
+    <pre id="sent-messages" aria-label="已发送的行动">尚未发送行动</pre>
+    <script type="module" src="./widget-host.ts"></script>
+  </body>
+</html>

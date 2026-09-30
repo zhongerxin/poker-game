@@ -131,6 +131,11 @@ const TABLE_WIDGET_META = {
   "openai/widgetCSP": WIDGET_CSP,
 } as const;
 
+// Result data only: preserve the published tool schemas and widget resource URI.
+function tableContext(g: GameState) {
+  return { game_id: g.id, hand_id: g.handId, stage: g.stage, bb: g.bb, sb: g.sb, button: g.button };
+}
+
 // ------------------ 注册资源 ------------------
 
 // 每个请求构建独立的 McpServer：createMcpHandler 会对每个请求新建 transport 并调用
@@ -331,8 +336,8 @@ function createServer(): McpServer {
         ],
         structuredContent: {
           ai: g.ai,
+          ...tableContext(g),
           hero_stack: g.hero.stack,
-          game_id: g.id,
           bb: g.bb,
           sb: g.sb,
           pot: g.pot,
@@ -341,6 +346,7 @@ function createServer(): McpServer {
         },
         _meta: {
           ...TABLE_WIDGET_META, 
+          ...tableContext(g),
           hero_hole,
           pot,
           hero_stack: g.hero.stack,
@@ -407,8 +413,7 @@ function createServer(): McpServer {
               type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
             }],
             structuredContent: {
-              game_id: game_id,
-              stage,
+              ...tableContext(g),
               board,
               ai: g.ai,
               hero_stack: g.hero.stack,
@@ -420,6 +425,7 @@ function createServer(): McpServer {
             },
             _meta: {
               ...TABLE_WIDGET_META,
+              ...tableContext(g),
               board,
               hero_hole,
               pot: g.pot,
@@ -444,8 +450,7 @@ function createServer(): McpServer {
               type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
             }],
             structuredContent: {
-              game_id: game_id,
-              stage,
+              ...tableContext(g),
               board,
               ai: g.ai,
               hero_stack: g.hero.stack,
@@ -457,6 +462,7 @@ function createServer(): McpServer {
             },
             _meta: {
               ...TABLE_WIDGET_META,
+              ...tableContext(g),
               board,
               hero_hole,
               pot: g.pot,
@@ -481,8 +487,7 @@ function createServer(): McpServer {
               type: "text", text: contentRsp.afterflop({ stage, board, bet, pot: g.pot as number, heroStack: g.hero.stack as number, aiStack: g.ai.stack as number, button: g.button as Button }),
             }],
             structuredContent: {
-              game_id: game_id,
-              stage,
+              ...tableContext(g),
               board,
               ai: g.ai,
               hero_stack: g.hero.stack,
@@ -494,6 +499,7 @@ function createServer(): McpServer {
             },
             _meta: {
               ...TABLE_WIDGET_META,
+              ...tableContext(g),
               board,
               hero_hole,
               pot: g.pot,
@@ -590,6 +596,7 @@ function createServer(): McpServer {
         structuredContent: {
           game_id: g.id,
           hand_id: g.handId,
+          stage: g.stage,
           winner: g.winner,
           end_reason: g.endReason,
           board,
@@ -605,6 +612,7 @@ function createServer(): McpServer {
         },
         _meta: {
           ...TABLE_WIDGET_META,
+          ...tableContext(g),
           board,
           ai_hole,
           hero_hole,
